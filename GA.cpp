@@ -116,7 +116,7 @@ else
    cout<<" --> Starting a new search "<<endl;
    // Creates work directory
    command ="if [ -d "+file_name+" ] ; then mv "+file_name+" other_"+file_name;
-   command+=" ; fi ; mkdir "+file_name+" ; cd "+file_name+"  ; mkdir Generation1 ;";
+   command+=" ; fi ; mkdir "+file_name+" ; cd "+file_name+"  ; mkdir Generation1 ; cd Generation1 ; mkdir tmp_dir ; cd .. ; ";
    command+=" cp ../input/* . ;";
    system(command.c_str());
    i=1; m=0;
@@ -418,15 +418,16 @@ cout<<"entering while loop"<<endl;
                   elegido2=j;
                }
             }
+cout<<"performing crossover"<<endl;
             new_cluster=Crossover(clus[elegido],clus[elegido2]);
             ////////////////// Bloque de código a copiar en mutate //////////////////
             path=file_name+"/Generation"+to_string(i);
-            command.clear(); command="cd "+path+" ; mkdir tmp_dir ; cp ../run.sh tmp_dir/";
+            command.clear(); command="cd "+path+" ; cp ../run.sh tmp_dir/";
             command+=" ; cp ../control.in tmp_dir/";
             system(command.c_str());
             command.clear();
             command=path+"/tmp_dir/geometry.in";
-            new_cluster.print_fhi("command");
+            new_cluster.print_fhi(command);
             command.clear();
             command="cd "+path+"/tmp_dir ; ./run.sh";
             system(command.c_str());
@@ -436,7 +437,8 @@ cout<<"entering while loop"<<endl;
             command.clear();
             command="grep \" | Total energy of the DFT \" "+path+"/tmp_dir/output.out | awk '{print $12}' ";
             new_cluster_energy=double_pipe(command.c_str());
-            /////////////////////////////////////////////////////////////////////////
+cout<<"FALG"<<endl;
+            // cp geometry.in   2 grep            /////////////////////////////////////////////////////////////////////////
          }
          else // Assumes is mutate
          {
@@ -453,8 +455,8 @@ cout<<"entering while loop"<<endl;
                      clus[elegido].swap(N_Simbolo_1);
                   }
                   clus[elegido].print_xyz("tmp.xyz");
-                  new_cluster.read_xyz("temp.xyz");
-                  system("rm temp.xyz");
+                  new_cluster.read_xyz("tmp.xyz");
+                  system("rm tmp.xyz");
                }
                else //kick type
                {
@@ -462,8 +464,8 @@ cout<<"entering while loop"<<endl;
                   {
                      clus[elegido].kick(step_width);
                      clus[elegido].print_xyz("tmp.xyz");
-                     new_cluster.read_xyz("temp.xyz");
-                     system("rm temp.xyz");
+                     new_cluster.read_xyz("tmp.xyz");
+                     system("rm tmp.xyz");
                   }
                   else // twist
                   {
@@ -478,8 +480,8 @@ cout<<"entering while loop"<<endl;
                {
                   clus[elegido].kick(step_width);
                   clus[elegido].print_xyz("tmp.xyz");
-                  new_cluster.read_xyz("temp.xyz");
-                  system("rm temp.xyz");
+                  new_cluster.read_xyz("tmp.xyz");
+                  system("rm tmp.xyz");
                }
                else // twist
                {
@@ -488,12 +490,12 @@ cout<<"entering while loop"<<endl;
             }
             ////////////////// Bloque de código a copiar en mutate //////////////////
             path=file_name+"/Generation"+to_string(i);
-            command.clear(); command="cd "+path+" ; mkdir tmp_dir ; cp ../run.sh tmp_dir/";
+            command.clear(); command="cd "+path+" ; cp ../run.sh tmp_dir/";
             command+=" ; cp ../control.in tmp_dir/";
             system(command.c_str());
             command.clear();
             command=path+"/tmp_dir/geometry.in";
-            new_cluster.print_fhi("command");
+            new_cluster.print_fhi(command);
             command.clear();
             command="cd "+path+"/tmp_dir ; ./run.sh";
             system(command.c_str());
@@ -503,34 +505,35 @@ cout<<"entering while loop"<<endl;
             command.clear();
             command="grep \" | Total energy of the DFT \" "+path+"/tmp_dir/output.out | awk '{print $12}' ";
             new_cluster_energy=double_pipe(command.c_str());
+    cout<<"FALG"<<endl;
+            // cp geometry.in   2 grep
             /////////////////////////////////////////////////////////////////////////
          }
          cout<<" entrando al selector de configuraciones"<<endl;
       if(new_cluster_energy<max_tmp)
       {
          command.clear();
-         command="cp "+file_name+"/Generation"+to_string(i)+" "+"Generation"+to_string(i+1);
+         command="cp -r "+file_name+"/Generation"+to_string(i)+" "+file_name+"/Generation"+to_string(i+1);
          system(command.c_str());
          command.clear();
          command="cd "+file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+" ; ";
-         command+="rm * ; mv ../tmp_dir/geometry.in.next_step .";
+         command+="rm geometry.in* ; mv ../tmp_dir/* .";
          system(command.c_str());
          command.clear();
          command=file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/geometry.in.next_step";
+cout<<"reading clus geometry next step"<<endl;
          clus[id_max].read_fhi(command);
          command.clear();
          command=file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/relaxed_coordinates.xyz";
          tag.clear();
          tag=" Iteration "+to_string(id_max)+" -----> Energy = "+to_string(new_cluster_energy)+" eV ";
+cout<<"writing clus geometry next step"<<endl;
          clus[id_max].print_xyz(command,tag);
          command.clear();
          i++;
       }
       else
       {
-         command.clear();
-         command=" cd "+file_name+"Generation"+to_string(i)+" ; rm -r tmp_dir ";
-         system(command.c_str());
          contenido=0;
       }
    }
