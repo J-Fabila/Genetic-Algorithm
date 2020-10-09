@@ -14,15 +14,15 @@
 \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\*/
 #include"atomic.hpp"
 string Simbolo_1, Simbolo_2, file_name, command, aux,geometry_file;
-string initialization_file, outputfile, m_str, i_str, E_str, tag;
+string initialization_file, outputfile, m_str, i_str, E_str, tag, path;
 int continue_alg,  Ncore, randomness, kick, iteraciones,swap_step, contenido, previus;
 int m, lj, N_Simbolo_1, N_Simbolo_2, count, fail_counter=0, resto, failed_max,crystal;
-int n_pop, element, fit_function;
+int n_pop, element, fit_function, init;
 float step_width, Temperature, Energy, Energia, EnergiaAnterior, k_BT, damp ;
 float x_min,y_min,z_min,x_max,y_max,z_max;
 Cluster clus_1, clus_2, c_aux;
 Crystal cristal;
-float dist;
+float dist, mate_mutate_ratio;
 int main(int argc, char *argv[]){
 //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
 //                                    Gets data from input.bh                                     //
@@ -40,15 +40,17 @@ kick=int_pipe("grep 'kick_type' input.bh  | cut -d \"=\" -f2 | awk '{print $1}' 
 file_name=string_pipe("grep 'directory_name' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 step_width=float_pipe("grep 'step_width' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 Temperature=float_pipe("grep 'temperature_K' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
+mate_mutate_ratio=float_pipe("grep 'mate_mutate_ratio' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 Ncore=int_pipe("grep 'Ncore' input.bh | head -1 | cut -d \"=\" -f2 | awk '{print $1}' ");
 iteraciones=int_pipe("grep 'iterations' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 swap_step=int_pipe("grep 'swap_step' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 lj=int_pipe("grep 'lennard-jones_aid' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 crystal=int_pipe("cd input ; if [ -f crystal.in ]  ; then echo 1  ;  fi ");
-Cluster clus[n_pop];
-double Fit[n_pop], rho[n_pop], a_exp, a_lin, fit_max, fit_min;
-double Energies[n_pop], max_tmp, min_tmp, current;
-int seleccion[n_pop];
+Cluster clus[n_pop], new_cluster;
+double Fit[n_pop], Probabilities[n_pop+1], rho[n_pop], a_exp, a_lin, fit_max, fit_min;
+double Energies[n_pop], max_tmp, min_tmp, current, new_cluster_energy;
+int seleccion[n_pop], elegido, elegido2, id_min, id_max;
+float eleccion;
 // Meta-parámetros /////
 failed_max=3;         //
 damp=0.7;             //
@@ -77,30 +79,33 @@ int i = 1;
 
 if(continue_alg==1)
 {
-  //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
-  //                                      RESTART ALGORITHM                                         //
-  //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
-  //En vez de reinicio podriamos hacer que directamente lo genera desde aca
-  cout<<" --> Restarting algorithm ...  "<<endl;
-      string iteration_counter_i ="cd ";
-             iteration_counter_i+=file_name;
-             iteration_counter_i+=" ; ls Generation* | wc -l";
-  i=int_pipe(iteration_counter_i,1);
+   //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+   //                                      RESTART ALGORITHM                                         //
+   //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+   //En vez de reinicio podriamos hacer que directamente lo genera desde aca
+   cout<<" --> Restarting algorithm ...  "<<endl;
+   string iteration_counter_i ="cd ";
+   iteration_counter_i+=file_name;
+   iteration_counter_i+=" ; ls Generation* | wc -l";
+   i=int_pipe(iteration_counter_i,1);
+   if(i==1)
+   {
       string iteration_counter_m ="cd ";
-             iteration_counter_m+=file_name;
-             iteration_counter_m+="/Generation"+to_string(i)+" ; ls -R | grep \"relaxed.xyz\" | wc -l"; //el -R nos da libertad de escoger nombres
-  m=int_pipe(iteration_counter_m,0);
-     command.clear(); command=" cd "+file_name+"/Generation"+to_string(i)+" ; head -2 current_minimum.xyz | tail -1 | awk '{print $6 }' ";
-     //RECUERDA: en cada generacion poner un current_minimum
-     Energy=float_pipe(command);
-     command.clear();
-
-  //cout<<" --> Last Generation i="<<i<<" ; last rejected m="<<m<<" ; total performed steps : "<<i+m<<endl;
-  cout<<" --> Last Generation i="<<i<<" ; "<<m<<"/"<<n_pop<<" relaxations performed : "<<i<<endl;
-  cout<<" --> Restarting from generation"<<i<<" and relaxation "<<m<<" "<<endl;
+      iteration_counter_m+=file_name;
+      iteration_counter_m+="/Generation"+to_string(i)+" ; ls -R | grep \"relaxed.xyz\" | wc -l"; //el -R nos da libertad de escoger nombres
+      m=int_pipe(iteration_counter_m,0);
+      /*command.clear(); command=" cd "+file_name+"/Generation"+to_string(i)+" ; head -2 current_minimum.xyz | tail -1 | awk '{print $6 }' ";
+      //RECUERDA: en cada generacion poner un current_minimum
+      Energy=float_pipe(command);*/
+      command.clear();
+   }
+   //cout<<" --> Last Generation i="<<i<<" ; last rejected m="<<m<<" ; total performed steps : "<<i+m<<endl;
+   //cout<<" --> Last Generation i="<<i<<" ; "<<m<<"/"<<n_pop<<" relaxations performed : "<<i<<endl;
+   cout<<" --> Last Generation i="<<i<<endl;
+   cout<<" --> Restarting from generation"<<i<<" and relaxation "<<m<<" "<<endl;
 //  i++;
 //  cout<<" --> Starting step "<<i<<endl;
-  m++;
+   m++;
 }
 else
 {
@@ -115,9 +120,10 @@ else
    system(command.c_str());
    i=1; m=0;
    contenido=0;
-//   while(contenido!=1)
-//   {
-      if(initialization_file.length() > 5)
+   init=1;
+   //while(contenido!=1)
+   //{
+      if(initialization_file.length() )// > 5 && init==1 )
       {
         cout<<" --> Reading initialization file from:  "<<initialization_file<<endl;
         //Generates geometry.in and then run FHI-aims, if geometry.in.next_step is not
@@ -138,6 +144,7 @@ else
         /////////////////////////////////
         cout<<" --> Generating a random population and adding initialization file from "<<initialization_file<<endl;
         count=1;
+        init++;
       }
       else
       {
@@ -237,16 +244,18 @@ else
       }
       m=0;
 }
-      cout<<" --> Starting FHI-aims calculations "<<endl;
 
-      command="echo 'Step ----> Energy[eV]' >> "+file_name+"/Generation1/energies.txt ";
-      system(command.c_str());
-      command.clear();
-cout<<"Entering loop"<<endl;
-// running
-for(m=m;m<n_pop;m++)
+if(i==1)
 {
-  cout<<m<<endl;
+   cout<<" --> Starting FHI-aims calculations "<<endl;
+   command="echo 'Step ----> Energy[eV]' >> "+file_name+"/Generation1/energies.txt ";
+   system(command.c_str());
+   command.clear();
+   cout<<"Entering loop"<<endl;
+   // running
+   for(m=m;m<n_pop;m++)
+   {
+      cout<<m<<endl;
       command.clear();
       command="cd "+file_name+"/Generation1/E"+to_string(m)+" ; cp ../../run.sh .";
       command+=" ; cp ../../control.in .";
@@ -259,8 +268,19 @@ for(m=m;m<n_pop;m++)
       command="grep 'Have a nice day' "+file_name+"/Generation1/E"+to_string(m)+"/output.out | wc -l";
       contenido=int_pipe(command.c_str());
       command.clear();
+      /*
+       while(contenido!=1)
+       {
+          //Generar nuevas configuraciones
+          aca seria copiar ypegar el if que genera de acuerdo conbimetalico conbimetalico
+          después sería reescribir los archivos en geometry.in
+          y luevo volver a correr con el .run.sh
+          habrá que esperar a si agregamos el kick despues de aplicar el generador pseudoaleatorio
+          por el momento asumamos que siempre converjera jeje
+       }
+       */
+   }
 }
-
    cout<<" --> Initial generation: DONE! "<<endl;
    cout<<" --> AG-DFT routine starts here "<<endl;
    cout<<"  "<<endl;
@@ -275,9 +295,11 @@ for(m=m;m<n_pop;m++)
 
    while( i<iteraciones)
    {
+cout<<"entering loop i "<<i<<endl;
       // Get energies from last iteration
       for(m=0;m<n_pop;m++)
       {
+cout<<"entering loop m "<<m<<endl;
          command="grep \" | Total energy of the DFT \" "+file_name+"/Generation"+to_string(i)+"/E"+to_string(m)+"/output.out | awk '{print $12}' ";
          Energies[m]=double_pipe(command.c_str());
          m_str=to_string(m);
@@ -295,8 +317,7 @@ for(m=m;m<n_pop;m++)
          system(command.c_str());
          command.clear();
       }
-      // Sort energies
-         // Get Maximum
+      // Get Maximum Energy Value
       max_tmp=Energies[0];
       for(j=1;j<n_pop;j++)
       {
@@ -306,7 +327,15 @@ for(m=m;m<n_pop;m++)
             max_tmp=current;
          }
       }
-         // Get Minimum
+      // Get Maximum index
+      for(j=0;j<n_pop;j++)
+      {
+         if( Energies[j] == max_tmp )
+         {
+            id_max=j;
+         }
+      }
+      // Get Minimum Energy Value
       min_tmp=Energies[0];
       for(j=1;j<n_pop;j++)
       {
@@ -314,6 +343,14 @@ for(m=m;m<n_pop;m++)
          if( current > min_tmp )
          {
             min_tmp=current;
+         }
+      }
+      // Get Minimum index
+      for(j=0;j<n_pop;j++)
+      {
+         if( Energies[j] == min_tmp )
+         {
+            id_min=j;
          }
       }
       // Calcula rho
@@ -324,7 +361,7 @@ for(m=m;m<n_pop;m++)
       // rho_max=1; rho_min=0;
 
       //Calcula fit
-      for(j=1;j<n_pop;j++)
+      for(j=0;j<n_pop;j++)
       {
          if(fit_function==0) // Exponential
          {
@@ -339,83 +376,142 @@ for(m=m;m<n_pop;m++)
             Fit[j]=(0.5)*(1-tanh(2.0*rho[j]-1));
          }
       }
-/*
-      if(criteria==0)
+      /*
+      criterio=EnergiaAnterior-EnergiaActual;
+            if(criterio<umbral)
+            {
+               cout<<" terminando AG"
+               break;
+            } // else:  continua con una nueva generacion
+      */
+      // Calcula las Probabilities
+      Probabilities[0]=0.0;
+      for(j=1;j<n_pop+1;j++)
       {
-         break;
+         Probabilities[j]=Fit[j-1]+Probabilities[j-1];
       }
-*/
-      //Establece los parámetros, rangos y porcentajes
-      if(fit_function==0) // Exponential
+      // rouleta
+      eleccion=random_number(0,Probabilities[n_pop+1]);
+      for(j=0;j<n_pop;j++)
       {
-         fit_max=exp(a_exp*1.0);
-         fit_min=exp(a_exp*0.0);
-      }
-      else if(fit_function==1) // Linear
-      {
-         fit_max=1-(a_lin*1.0);
-         fit_min=1-(a_lin*0.0);
-      }
-      else if(fit_function==2) // tanh
-      {
-         fit_max=(0.5)*(1-tanh(2.0-1));
-         fit_min=(0.5)*(1-tanh(-1.0));
-      }
-
-      //Seleccion de los especímenes
-      for(j=1;j<n_pop;j++)
-      {
-         if(Fit[j]>(fit_min+(fit_max-fit_min)*0.8))  // 20% sobrevive tal cual
+         if((Probabilities[j] =< eleccion) && (eleccion < Probabilities[j+1]))
          {
-            seleccion[j]=0; //"sobrevive"
+            elegido=j;
          }
-         else if((Fit[j]>(fit_min+(fit_max-fit_min)*0.5)) && (Fit[j]<(fit_min+(fit_max-fit_min)*0.8))) // %30 pasa sus hijos
+      }
+      contenido=0;
+      while(contenido==0)
+      {
+         if( random_number(0,1)<mate_mutate_ratio ) //Then mate
          {
-            seleccion[j]=1; //"crossover"
+            //Code for mating
+            // Elige al segundo padre
+            // Other rouleta
+            eleccion=random_number(0,Probabilities[n_pop+1]);
+            for(j=0;j<n_pop;j++)
+            {
+               if(((Probabilities[j] < eleccion) && (eleccion < Probabilities[j+1]) ) && (j!=elegido))
+               {
+                  elegido2=j;
+               }
+            }
+            new_cluster=crossover(clus[elegido],clus[elegido2]);
+            ////////////////// Bloque de código a copiar en mutate //////////////////
+            path=file_name+"/Generation"+to_string(i);
+            command.clear(); command="cd "+path+" ; mkdir tmp_dir ; cp ../../run.sh .";
+            command+=" ; cp ../../control.in .";
+            system(command.c_str());
+            command.clear();
+            command=path+"/tmp_dir/geometry.in";
+            new_cluster.print_fhi("command");
+            command.clear();
+            command="cd "+path+" ; ./run.sh";
+            system(command.c_str());
+            command.clear();
+            command="grep 'Have a nice day' "+path+"tmp_dir/output.out | wc -l";
+            contenido=int_pipe(command.c_str());
+            command.clear();
+            command="grep \" | Total energy of the DFT \" "+path+"/tmp_dir/output.out | awk '{print $12}' ";
+            new_cluster_energy=double_pipe(command.c_str());
+            /////////////////////////////////////////////////////////////////////////
          }
-         else if(Fit[j]<=(fit_min+(fit_max-fit_min)*0.5)) // %50 mutan: 20% kick; 10% swap; 20% twist
+         else // Assumes is mutate
          {
             if(N_Simbolo_2>0) // Si es bimetálico se utiliza el swap
             {
-               if(random_number(0,1)<0.75)
+               if(random_number(0,1)<swap_rate) //swap
                {
-                  seleccion[j]=2; //"kick";
+                  if(N_Simbolo_1>=N_Simbolo_2)
+                  {
+                     new_cluster=clus[elegido].swap(N_Simbolo_2);
+                  }
+                  else
+                  {
+                     new_cluster=clus[elegido].swap(N_Simbolo_1);
+                  }
                }
-               else
+               else //kick type
                {
-                  seleccion[j]=3; //"swap";
+                  if(random_number(0,1)<0.5) //kick
+                  {
+                     new_cluster=clus[elegido].kick(step_width);
+                  }
+                  else // twist
+                  {
+                     new_cluster=crossover(clus[elegido],clus[elegido]);
+                  }
                }
             }
-            else
+            else // Significa que es monometálico
             {
-               seleccion[j]=2; //"kick";
+               if(random_number(0,1)<0.5) //kick
+               {
+                  new_cluster=clus[elegido].kick(step_width);
+               }
+               else // twist
+               {
+                  new_cluster=crossover(clus[elegido],clus[elegido]);
+               }
             }
+            ////////////////// Bloque de código a copiar en mutate //////////////////
+            path=file_name+"/Generation"+to_string(i);
+            command.clear(); command="cd "+path+" ; mkdir tmp_dir ; cp ../../run.sh .";
+            command+=" ; cp ../../control.in .";
+            system(command.c_str());
+            command.clear();
+            command=path+"/tmp_dir/geometry.in";
+            new_cluster.print_fhi("command");
+            command.clear();
+            command="cd "+path+" ; ./run.sh";
+            system(command.c_str());
+            command.clear();
+            command="grep 'Have a nice day' "+path+"tmp_dir/output.out | wc -l";
+            contenido=int_pipe(command.c_str());
+            command.clear();
+            command="grep \" | Total energy of the DFT \" "+path+"/tmp_dir/output.out | awk '{print $12}' ";
+            new_cluster_energy=double_pipe(command.c_str());
+            /////////////////////////////////////////////////////////////////////////
          }
       }
-      // Performs opereations
-      for(j=1;j<n_pop;j++)
+      if(new_cluster_energy<max_tmp)
       {
-         if(seleccion[j]==0)  // 20% sobrevive tal cual
-         {
-
-         }
-         else if(seleccion[j]==1) // %30 pasa sus hijos
-         {
-
-         }
-         else if(seleccion[j]==2) // %50 mutan: 20% kick; 10% swap; 20% twist??
-         {
-         }
-         else if(seleccion[j]==3) // swap
-         {
-
-         }
+         command.clear();
+         command="cp "+file_name+"/Generation"+to_string(i)+" "+"Generation"+to_string(i+1);
+         system(command.c_str());
+         command.clear();
+         command="cd "+file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+" ; ";
+         command+="rm geometry.in ; mv ../tmp_dir/geometry.in.next_step .";
+         //read geometrynext steps
+         //re print with energy obtained into relaxed_coordinates.xyz
+         
+      /*  i++ crear un nuevo directorio y copiar los archivos, luego reemplazar
+        reemplazar el directorio E id_min con E_new*/
+        i++
       }
-      // Relaja las configurasaoes
-      for(j=1;j<n_pop;j++)
+      else
       {
+         contenido=0;
       }
-      i++;
-   }
+   } // End while
    return 0;
 }
