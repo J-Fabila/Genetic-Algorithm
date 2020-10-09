@@ -22,7 +22,7 @@ float step_width, Temperature, Energy, Energia, EnergiaAnterior, k_BT, damp ;
 float x_min,y_min,z_min,x_max,y_max,z_max;
 Cluster clus_1, clus_2, c_aux;
 Crystal cristal;
-float dist, mate_mutate_ratio;
+float dist, mate_mutate_ratio, swap_ratio;
 int main(int argc, char *argv[]){
 //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
 //                                    Gets data from input.bh                                     //
@@ -41,6 +41,7 @@ file_name=string_pipe("grep 'directory_name' input.bh | cut -d \"=\" -f2 | awk '
 step_width=float_pipe("grep 'step_width' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 Temperature=float_pipe("grep 'temperature_K' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 mate_mutate_ratio=float_pipe("grep 'mate_mutate_ratio' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
+swap_ratio=float_pipe("grep 'swap_ratio' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 Ncore=int_pipe("grep 'Ncore' input.bh | head -1 | cut -d \"=\" -f2 | awk '{print $1}' ");
 iteraciones=int_pipe("grep 'iterations' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 swap_step=int_pipe("grep 'swap_step' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
@@ -123,7 +124,7 @@ else
    init=1;
    //while(contenido!=1)
    //{
-      if(initialization_file.length() )// > 5 && init==1 )
+      if(initialization_file.length() > 5 ) //&& init==1 )
       {
         cout<<" --> Reading initialization file from:  "<<initialization_file<<endl;
         //Generates geometry.in and then run FHI-aims, if geometry.in.next_step is not
@@ -268,8 +269,8 @@ if(i==1)
       command="grep 'Have a nice day' "+file_name+"/Generation1/E"+to_string(m)+"/output.out | wc -l";
       contenido=int_pipe(command.c_str());
       command.clear();
-      /*
-       while(contenido!=1)
+      contenido=0;
+       /*while(contenido!=1)
        {
           //Generar nuevas configuraciones
           aca seria copiar ypegar el if que genera de acuerdo conbimetalico conbimetalico
@@ -277,8 +278,8 @@ if(i==1)
           y luevo volver a correr con el .run.sh
           habrá que esperar a si agregamos el kick despues de aplicar el generador pseudoaleatorio
           por el momento asumamos que siempre converjera jeje
-       }
-       */
+       }*/
+
    }
 }
    cout<<" --> Initial generation: DONE! "<<endl;
@@ -317,6 +318,7 @@ cout<<"entering loop m "<<m<<endl;
          system(command.c_str());
          command.clear();
       }
+cout<<"saliendo del loop m"<<endl;
       // Get Maximum Energy Value
       max_tmp=Energies[0];
       for(j=1;j<n_pop;j++)
@@ -394,14 +396,15 @@ cout<<"entering loop m "<<m<<endl;
       eleccion=random_number(0,Probabilities[n_pop+1]);
       for(j=0;j<n_pop;j++)
       {
-         if((Probabilities[j] =< eleccion) && (eleccion < Probabilities[j+1]))
+         if((Probabilities[j] <= eleccion) && (eleccion < Probabilities[j+1]))
          {
             elegido=j;
          }
       }
       contenido=0;
-      while(contenido==0)
+      while(contenido!=1)
       {
+cout<<"entering while loop"<<endl;
          if( random_number(0,1)<mate_mutate_ratio ) //Then mate
          {
             //Code for mating
@@ -415,20 +418,20 @@ cout<<"entering loop m "<<m<<endl;
                   elegido2=j;
                }
             }
-            new_cluster=crossover(clus[elegido],clus[elegido2]);
+            new_cluster=Crossover(clus[elegido],clus[elegido2]);
             ////////////////// Bloque de código a copiar en mutate //////////////////
             path=file_name+"/Generation"+to_string(i);
-            command.clear(); command="cd "+path+" ; mkdir tmp_dir ; cp ../../run.sh .";
-            command+=" ; cp ../../control.in .";
+            command.clear(); command="cd "+path+" ; mkdir tmp_dir ; cp ../run.sh tmp_dir/";
+            command+=" ; cp ../control.in tmp_dir/";
             system(command.c_str());
             command.clear();
             command=path+"/tmp_dir/geometry.in";
             new_cluster.print_fhi("command");
             command.clear();
-            command="cd "+path+" ; ./run.sh";
+            command="cd "+path+"/tmp_dir ; ./run.sh";
             system(command.c_str());
             command.clear();
-            command="grep 'Have a nice day' "+path+"tmp_dir/output.out | wc -l";
+            command="grep 'Have a nice day' "+path+"/tmp_dir/output.out | wc -l";
             contenido=int_pipe(command.c_str());
             command.clear();
             command="grep \" | Total energy of the DFT \" "+path+"/tmp_dir/output.out | awk '{print $12}' ";
@@ -439,60 +442,70 @@ cout<<"entering loop m "<<m<<endl;
          {
             if(N_Simbolo_2>0) // Si es bimetálico se utiliza el swap
             {
-               if(random_number(0,1)<swap_rate) //swap
+               if(random_number(0,1)<swap_ratio) //swap
                {
                   if(N_Simbolo_1>=N_Simbolo_2)
                   {
-                     new_cluster=clus[elegido].swap(N_Simbolo_2);
+                     clus[elegido].swap(N_Simbolo_2);
                   }
                   else
                   {
-                     new_cluster=clus[elegido].swap(N_Simbolo_1);
+                     clus[elegido].swap(N_Simbolo_1);
                   }
+                  clus[elegido].print_xyz("tmp.xyz");
+                  new_cluster.read_xyz("temp.xyz");
+                  system("rm temp.xyz");
                }
                else //kick type
                {
                   if(random_number(0,1)<0.5) //kick
                   {
-                     new_cluster=clus[elegido].kick(step_width);
+                     clus[elegido].kick(step_width);
+                     clus[elegido].print_xyz("tmp.xyz");
+                     new_cluster.read_xyz("temp.xyz");
+                     system("rm temp.xyz");
                   }
                   else // twist
                   {
-                     new_cluster=crossover(clus[elegido],clus[elegido]);
+                     new_cluster=Crossover(clus[elegido],clus[elegido]);
                   }
+
                }
             }
             else // Significa que es monometálico
             {
                if(random_number(0,1)<0.5) //kick
                {
-                  new_cluster=clus[elegido].kick(step_width);
+                  clus[elegido].kick(step_width);
+                  clus[elegido].print_xyz("tmp.xyz");
+                  new_cluster.read_xyz("temp.xyz");
+                  system("rm temp.xyz");
                }
                else // twist
                {
-                  new_cluster=crossover(clus[elegido],clus[elegido]);
+                  new_cluster=Crossover(clus[elegido],clus[elegido]);
                }
             }
             ////////////////// Bloque de código a copiar en mutate //////////////////
             path=file_name+"/Generation"+to_string(i);
-            command.clear(); command="cd "+path+" ; mkdir tmp_dir ; cp ../../run.sh .";
-            command+=" ; cp ../../control.in .";
+            command.clear(); command="cd "+path+" ; mkdir tmp_dir ; cp ../run.sh tmp_dir/";
+            command+=" ; cp ../control.in tmp_dir/";
             system(command.c_str());
             command.clear();
             command=path+"/tmp_dir/geometry.in";
             new_cluster.print_fhi("command");
             command.clear();
-            command="cd "+path+" ; ./run.sh";
+            command="cd "+path+"/tmp_dir ; ./run.sh";
             system(command.c_str());
             command.clear();
-            command="grep 'Have a nice day' "+path+"tmp_dir/output.out | wc -l";
+            command="grep 'Have a nice day' "+path+"/tmp_dir/output.out | wc -l";
             contenido=int_pipe(command.c_str());
             command.clear();
             command="grep \" | Total energy of the DFT \" "+path+"/tmp_dir/output.out | awk '{print $12}' ";
             new_cluster_energy=double_pipe(command.c_str());
             /////////////////////////////////////////////////////////////////////////
          }
-      }
+         cout<<" entrando al selector de configuraciones"<<endl;
       if(new_cluster_energy<max_tmp)
       {
          command.clear();
@@ -500,18 +513,27 @@ cout<<"entering loop m "<<m<<endl;
          system(command.c_str());
          command.clear();
          command="cd "+file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+" ; ";
-         command+="rm geometry.in ; mv ../tmp_dir/geometry.in.next_step .";
-         //read geometrynext steps
-         //re print with energy obtained into relaxed_coordinates.xyz
-         
-      /*  i++ crear un nuevo directorio y copiar los archivos, luego reemplazar
-        reemplazar el directorio E id_min con E_new*/
-        i++
+         command+="rm * ; mv ../tmp_dir/geometry.in.next_step .";
+         system(command.c_str());
+         command.clear();
+         command=file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/geometry.in.next_step";
+         clus[id_max].read_fhi(command);
+         command.clear();
+         command=file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/relaxed_coordinates.xyz";
+         tag.clear();
+         tag=" Iteration "+to_string(id_max)+" -----> Energy = "+to_string(new_cluster_energy)+" eV ";
+         clus[id_max].print_xyz(command,tag);
+         command.clear();
+         i++;
       }
       else
       {
+         command.clear();
+         command=" cd "+file_name+"Generation"+to_string(i)+" ; rm -r tmp_dir ";
+         system(command.c_str());
          contenido=0;
       }
-   } // End while
+   }
+ }
    return 0;
 }
