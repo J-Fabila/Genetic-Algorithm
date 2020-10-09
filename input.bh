@@ -3,8 +3,10 @@
 /_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
 
         initialization_file = false
-        n_pop = 10
-
+        n_pop = 3
+        swap_ratio = 0.2
+        fit_function = 1
+        mate_mutate_ratio = 0.7
         directory_name = Au5Ir5
         continue = 0       # change to 1 to restart BH-DFT calculation
         cluster_ntyp = [Au:5], [Ir:5]
