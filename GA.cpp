@@ -132,20 +132,22 @@ else
         //Generates geometry.in and then run FHI-aims, if geometry.in.next_step is not
         //genereted then anyway here is created as a copy of the original.
         /////////////////////////////////
-        command.clear(); command="cd "+file_name+"/Generation1 ; mkdir E"+to_string(m);
+        command.clear(); command="cd "+file_name+"/Generation1 ; mkdir E0 ; cd ../.. ; ";
         command+="cp ";                //
         command+=initialization_file;  //
-        command+=" "+file_name+"/Generation1/E1/geometry.in";
+        command+=" "+file_name+"/Generation1/E0/geometry.in";
         system(command.c_str());       //
         command.clear();               //
         /////////////////////////////////
         command ="cp ";                //
         command+=initialization_file;  //
-        command+=" "+file_name+"/Generation1/E1/geometry.in.next_step";
+        command+=" "+file_name+"/Generation1/E0/geometry.in.next_step";
         system(command.c_str());       //
         command.clear();               //
         /////////////////////////////////
-        cout<<" --> Generating a random population and adding initialization file from "<<initialization_file<<endl;
+        cout<<" --> Generating a random population and adding initialization file" <<endl;
+        cout<<"   --> Cluster 0 is the initializacion file from "<<initialization_file<<endl;
+
         count=1;
         init++;
       }
@@ -259,6 +261,7 @@ if(i==1)
    // running
    for(m=m;m<n_pop;m++)
    {
+      cout<<" --> Performing relaxation of element "<<m<<endl;
       command.clear();
       command="cd "+file_name+"/Generation1/E"+to_string(m)+" ; cp ../../run.sh .";
       command+=" ; cp ../../control.in .";
@@ -267,20 +270,107 @@ if(i==1)
       command="cd "+file_name+"/Generation1/E"+to_string(m)+" ; ./run.sh";
       system(command.c_str());
       command.clear();
-      // Tal vez contenido ya no se use
       command="grep 'Have a nice day' "+file_name+"/Generation1/E"+to_string(m)+"/output.out | wc -l";
       contenido=int_pipe(command.c_str());
       command.clear();
-      contenido=0;
-       /*while(contenido!=1)
+      while(contenido!=1)
        {
-          //Generar nuevas configuraciones
-          aca seria copiar ypegar el if que genera de acuerdo conbimetalico conbimetalico
-          después sería reescribir los archivos en geometry.in
-          y luevo volver a correr con el .run.sh
-          habrá que esperar a si agregamos el kick despues de aplicar el generador pseudoaleatorio
-          por el momento asumamos que siempre converjera jeje
-       }*/
+         if(N_Simbolo_2>0)  // For bimetallic cases
+         {
+            if(randomness==1)  // Fully random
+            {
+               cout<<"   --> Cluster "<<m<<" created using fully random generator "<<endl;
+               clus[element].srand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
+               if(lj!=0)
+               {
+                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  clus[element].geometry_optimization();
+               }
+            }
+            else if(randomness==0)//pseudorandomly (cuts Au80 cluster)
+            {
+               cout<<"   --> Cluster "<<m<<" created cleaving Au80 cluster until get the required number of atoms"<<endl;
+               clus[element].rand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
+               clus[element].kick(step_width);
+               if(lj!=0)
+               {
+                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  clus[element].geometry_optimization();
+               }
+            }
+            else if(randomness==2)// Roy-based generator
+            {
+               cout<<"   --> Cluster "<<m<<" created using random generator based on Roy Jhonston "<<endl;
+               clus[element].roy_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
+               if(lj!=0)
+               {
+                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  clus[element].geometry_optimization();
+               }
+            }
+         }
+         else //Monometallic cases
+         {
+            if(randomness==1)  // fully random
+            {
+               cout<<"   --> Cluster "<<m<<" created using fully random generator "<<endl;
+               clus[element].srand_generator(Simbolo_1,N_Simbolo_1);
+               if(lj!=0)
+               {
+                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  clus[element].geometry_optimization();
+               }
+            }
+            else if(randomness==0)//pseudorandomly (cuts Au80 cluster)
+            {
+               cout<<"   --> Cluster "<<m<<" created cleaving Au80 cluster until get the required number of atoms"<<endl;
+               clus[element].rand_generator(Simbolo_1,N_Simbolo_1);
+               clus[element].kick(step_width);
+               if(lj!=0)
+               {
+                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  clus[element].geometry_optimization();
+               }
+            }
+            else if(randomness==2)// Roy-based generator
+            {
+               cout<<"   --> Cluster "<<m<<" created using random generator based on Roy Jhonston "<<endl;
+               clus[element].roy_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
+               if(lj!=0)
+               {
+                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  clus[element].geometry_optimization();
+               }
+            }
+         }
+         if(crystal==0)
+         {
+            clus[element].centroid();
+            geometry_file.clear();
+            geometry_file=file_name+"/Generation1/E"+to_string(element)+"/geometry.in";
+            clus[element].print_fhi(geometry_file);
+         }
+         else{
+            clus[element].centroid();
+            clus[element].move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus[element].z_min());
+            geometry_file.clear();
+            geometry_file=file_name+"/Generation1/E"+to_string(element)+"/geometry.temp";
+            clus[element].print_fhi(geometry_file);
+            command="sed '/atom/a initial_moment 0.5' "+file_name+"/crystal.in >> "+geometry_file;
+            command+=" ; mv "+geometry_file+" "+file_name+"/tmp_dir/geometry.in";
+            system(command.c_str());
+            command.clear();
+         }
+         command.clear();
+         command="cd "+file_name+"/Generation1/E"+to_string(m)+" ; ./run.sh";
+         system(command.c_str());
+         command.clear();
+         // Tal vez contenido ya no se use
+         command="grep 'Have a nice day' "+file_name+"/Generation1/E"+to_string(m)+"/output.out | wc -l";
+         contenido=int_pipe(command.c_str());
+         command.clear();
+
+       }
 
    }
 }
@@ -293,9 +383,9 @@ if(i==1)
    cout<<"Note: "<<endl;
    cout<<"For monometallic clusters: only random xyz moves and twists will be applied "<<endl;
    cout<<"For bimetallic clusters  : atomic swap will be performed randomly with probability "<<swap_ratio<<endl;
-   cout<<"================================================================================================\n\n"<<endl;
+   cout<<"================================================================================================\n"<<endl;
 
-   while( i<iteraciones)
+   while( i<iteraciones+1)
    {
       // Get energies from last iteration
       cout<<" --> Reading energies from last generation "<<endl;
@@ -307,7 +397,23 @@ if(i==1)
          E_str=string_pipe(command); //Better for Energies with all the value
          command.clear();
          command=file_name+"/Generation"+to_string(i)+"/E"+to_string(m)+"/geometry.in.next_step";
-         clus[element].read_fhi(command);
+         if(crystal==0) // Gas phase
+         {
+            clus[element].read_fhi(command);
+         }
+         else // Crystal
+         {
+            if(N_Simbolo_2>0)
+            {
+               clus_1=extract(geometry_file,Simbolo_1);
+               clus_2=extract(geometry_file,Simbolo_2);
+               clus[element]  =clus_1+clus_2;
+            }
+            else // for monometallics:
+            {
+               clus[element]=extract(geometry_file,Simbolo_1);
+            }
+         }
          command.clear();
          command=file_name+"/Generation"+to_string(i)+"/E"+to_string(m)+"/relaxed_coordinates.xyz";
          tag.clear();
@@ -416,10 +522,10 @@ if(i==1)
             elegido=j;
          }
       }
-      cout<<" --> entering while "<<endl;
       contenido=0;
       while(contenido!=1)
       {
+        cout<<"Starting new while cycle"<<endl;
          if( random_number(0,1)<mate_mutate_ratio ) //Then mate
          {
             //Code for mating
@@ -440,9 +546,25 @@ if(i==1)
             command.clear(); command="cd "+path+" ; cp ../run.sh tmp_dir/";
             command+=" ; cp ../control.in tmp_dir/";
             system(command.c_str());
-            command.clear();
-            command=path+"/tmp_dir/geometry.in";
-            new_cluster.print_fhi(command);
+            ///////////////
+            if(crystal==0)
+            {
+               command.clear();
+               command=path+"/tmp_dir/geometry.in";
+               new_cluster.centroid();
+               new_cluster.print_fhi(command);
+            }
+            else
+            {
+              //codigo para cristal
+              geometry_file.clear(); geometry_file=file_name+"/tmp_dir/geometry.tmp";
+              new_cluster.centroid();
+              new_cluster.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus[element].z_min());
+              new_cluster.print_fhi(geometry_file);
+              command="sed '/atom/a initial_moment 0.5' "+file_name+"/crystal.in >> "+geometry_file;
+              command+=" ; mv "+geometry_file+" "+file_name+"/tmp_dir/geometry.in";
+              system(command.c_str());
+            }
             command.clear();
             cout<<" --> Relaxing son element "<<endl;
             command="cd "+path+"/tmp_dir ; ./run.sh";
@@ -453,7 +575,7 @@ if(i==1)
             command.clear();
             command="grep \" | Total energy of the DFT \" "+path+"/tmp_dir/output.out | awk '{print $12}' ";
             new_cluster_energy=double_pipe(command.c_str());
-            // cp geometry.in   2 grep            /////////////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////
          }
          else // Assumes is mutate
          {
@@ -490,7 +612,6 @@ if(i==1)
                      new_cluster=Crossover(clus[elegido],clus[elegido]);
                      cout<<" --> Twisting selected cluster "<<elegido<<endl;
                   }
-
                }
             }
             else // Significa que es monometálico
@@ -514,10 +635,27 @@ if(i==1)
             command.clear(); command="cd "+path+" ; cp ../run.sh tmp_dir/";
             command+=" ; cp ../control.in tmp_dir/";
             system(command.c_str());
+            ///////////////
+            if(crystal==0)
+            {
+               command.clear();
+               command=path+"/tmp_dir/geometry.in";
+               new_cluster.centroid();
+               new_cluster.print_fhi(command);
+            }
+            else
+            {
+              //codigo para cristal
+              geometry_file.clear(); geometry_file=file_name+"/tmp_dir/geometry.tmp";
+              new_cluster.centroid();
+              new_cluster.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus[element].z_min());
+              new_cluster.print_fhi(geometry_file);
+              command="sed '/atom/a initial_moment 0.5' "+file_name+"/crystal.in >> "+geometry_file;
+              command+=" ; mv "+geometry_file+" "+file_name+"/tmp_dir/geometry.in";
+              system(command.c_str());
+            }
             command.clear();
-            command=path+"/tmp_dir/geometry.in";
-            new_cluster.print_fhi(command);
-            command.clear();
+            cout<<" --> Relaxing son element "<<endl;
             command="cd "+path+"/tmp_dir ; ./run.sh";
             system(command.c_str());
             command.clear();
@@ -530,7 +668,11 @@ if(i==1)
          }
       if(new_cluster_energy<max_tmp)
       {
-         cout<<" --> Starting generation "<<to_string(i+1)<<endl;
+         if(i+1 <= iteraciones)
+         {
+            cout<<"================================================================================================"<<endl;
+            cout<<" --> Starting generation "<<to_string(i+1)<<endl;
+            cout<<"================================================================================================"<<endl;
          command.clear();
          command="cp -r "+file_name+"/Generation"+to_string(i)+" "+file_name+"/Generation"+to_string(i+1);
          system(command.c_str());
@@ -548,6 +690,7 @@ if(i==1)
          clus[id_max].print_xyz(command,tag);
          command.clear();
          i++;
+       }
       }
       else
       {
@@ -555,5 +698,6 @@ if(i==1)
       }
    }
  }
+ cout<<" --> Maximum number of generations reached ... Stopping Genetic Algorithm"<<endl;
    return 0;
 }
