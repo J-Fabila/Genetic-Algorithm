@@ -1,18 +1,21 @@
 /*\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 # Implementation of the Genetic Algorithm (GA) algorithm for structure optimization
 #
-# Version X.X Octuber 2020
+# Version 1.0 Octuber 2020
 #
-# BH algorithm has been implemented using C++;
+# GA algorithm has been implemented using C++;
 # coupled to FHI-aims X.X (DFT code as calculator)
 # It also works with newest XX version, XX
 #
 # Author : Jorge Refugio Fabila Fabian <jorge_fabila@ciencias.unam.mx> (IF-UNAM)
 # Advisor : Dr. Oliver Paz Borbon <oliver_paz@fisica.unam.mx> (IF-UNAM)
+# Advisor : Dr. Fernando Buendia Zamudio <ferbuza@fisica.unam.mx> (IF-UNAM)
 #
 # Note: Output folders will be generated in current directory
 \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\*/
+
 #include"atomic.hpp"
+
 string Simbolo_1, Simbolo_2, file_name, command, aux,geometry_file;
 string initialization_file, outputfile, m_str, i_str, E_str, tag, path;
 int continue_alg,  Ncore, randomness, kick, iteraciones,swap_step, contenido, previus;
@@ -83,7 +86,6 @@ if(continue_alg==1)
    //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
    //                                      RESTART ALGORITHM                                         //
    //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
-   //En vez de reinicio podriamos hacer que directamente lo genera desde aca
    cout<<" --> Restarting algorithm ...  "<<endl;
    string iteration_counter_i ="cd ";
    iteration_counter_i+=file_name;
@@ -159,7 +161,7 @@ else
          {
             if(randomness==1)  // Fully random
             {
-               cout<<"   --> Using fully random generator "<<endl;
+               cout<<"   --> Cluster "<<element<<" created using fully random generator "<<endl;
                clus[element].srand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
                if(lj!=0)
                {
@@ -169,8 +171,9 @@ else
             }
             else if(randomness==0)//pseudorandomly (cuts Au80 cluster)
             {
-               cout<<"   --> Cleaving Au80 cluster until get a "<<Simbolo_1<<N_Simbolo_1<<Simbolo_2<<N_Simbolo_2<<" new cluster "<<endl;
+               cout<<"   --> Cluster "<<element<<" created cleaving Au80 cluster until get the required number of atoms"<<endl;
                clus[element].rand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
+               clus[element].kick(step_width);
                if(lj!=0)
                {
                   cout<<"   --> Optimizing geometry with L-J potential "<<endl;
@@ -179,7 +182,7 @@ else
             }
             else if(randomness==2)// Roy-based generator
             {
-               cout<<"   --> Using random generator based on Roy Jhonston "<<endl;
+               cout<<"   --> Cluster "<<element<<" created using random generator based on Roy Jhonston "<<endl;
                clus[element].roy_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
                if(lj!=0)
                {
@@ -192,7 +195,7 @@ else
          {
             if(randomness==1)  // fully random
             {
-               cout<<"   --> Using fully random generator "<<endl;
+               cout<<"   --> Cluster "<<element<<" created using fully random generator "<<endl;
                clus[element].srand_generator(Simbolo_1,N_Simbolo_1);
                if(lj!=0)
                {
@@ -202,8 +205,9 @@ else
             }
             else if(randomness==0)//pseudorandomly (cuts Au80 cluster)
             {
-               cout<<"   --> Cleaving Au80 cluster until get a "<<Simbolo_1<<N_Simbolo_1<<" new cluster "<<endl;
+               cout<<"   --> Cluster "<<element<<" created cleaving Au80 cluster until get the required number of atoms"<<endl;
                clus[element].rand_generator(Simbolo_1,N_Simbolo_1);
+               clus[element].kick(step_width);
                if(lj!=0)
                {
                   cout<<"   --> Optimizing geometry with L-J potential "<<endl;
@@ -212,7 +216,7 @@ else
             }
             else if(randomness==2)// Roy-based generator
             {
-               cout<<"   --> Using random generator based on Roy Jhonston "<<endl;
+               cout<<"   --> Cluster "<<element<<" created using random generator based on Roy Jhonston "<<endl;
                clus[element].roy_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
                if(lj!=0)
                {
@@ -252,11 +256,9 @@ if(i==1)
    command="echo 'Step ----> Energy[eV]' >> "+file_name+"/Generation1/energies.txt ";
    system(command.c_str());
    command.clear();
-   cout<<"Entering loop"<<endl;
    // running
    for(m=m;m<n_pop;m++)
    {
-      cout<<m<<endl;
       command.clear();
       command="cd "+file_name+"/Generation1/E"+to_string(m)+" ; cp ../../run.sh .";
       command+=" ; cp ../../control.in .";
@@ -285,22 +287,20 @@ if(i==1)
    cout<<" --> Initial generation: DONE! "<<endl;
    cout<<" --> AG-DFT routine starts here "<<endl;
    cout<<"  "<<endl;
-   cout<<" --> Starting generation 2 "<<endl;
 
    cout<<"================================================================================================"<<endl;
    cout<<"GA-DFT routine starts here! "<<endl;
-   /*cout<<"Note: "<<endl;
-   cout<<"For monometallic clusters: only random xyz moves will be applied "<<endl;
-   cout<<"For bimetallic clusters  : 1 atomic swap will be performed after "<<swap_step<<" moves "<<endl;
-   cout<<"================================================================================================"<<endl;*/
+   cout<<"Note: "<<endl;
+   cout<<"For monometallic clusters: only random xyz moves and twists will be applied "<<endl;
+   cout<<"For bimetallic clusters  : atomic swap will be performed randomly with probability "<<swap_ratio<<endl;
+   cout<<"================================================================================================\n\n"<<endl;
 
    while( i<iteraciones)
    {
-cout<<"entering loop i "<<i<<endl;
       // Get energies from last iteration
+      cout<<" --> Reading energies from last generation "<<endl;
       for(m=0;m<n_pop;m++)
       {
-cout<<"entering loop m "<<m<<endl;
          command="grep \" | Total energy of the DFT \" "+file_name+"/Generation"+to_string(i)+"/E"+to_string(m)+"/output.out | awk '{print $12}' ";
          Energies[m]=double_pipe(command.c_str());
          m_str=to_string(m);
@@ -318,7 +318,7 @@ cout<<"entering loop m "<<m<<endl;
          system(command.c_str());
          command.clear();
       }
-cout<<"saliendo del loop m"<<endl;
+      cout<<" --> Sorting obtained energies "<<endl;
       // Get Maximum Energy Value
       max_tmp=Energies[0];
       for(j=1;j<n_pop;j++)
@@ -356,12 +356,25 @@ cout<<"saliendo del loop m"<<endl;
          }
       }
       // Calcula rho
+      cout<<" --> Normalizing energies from last generation"<<endl;
       for(j=1;j<n_pop;j++)
       {
          rho[j]=(Energies[j]-min_tmp)/(max_tmp-min_tmp);
       }
       // rho_max=1; rho_min=0;
-
+      cout<<" --> Calculating Fit values with ";
+      if(fit_function==0) // Exponential
+      {
+         cout<<" exponential function"<<endl;
+      }
+      else if(fit_function==1) // Linear
+      {
+         cout<<" linear function "<<endl;
+      }
+      else if(fit_function==2) // tanh
+      {
+         cout<<" hyperbolic tangen function "<<endl;
+      }
       //Calcula fit
       for(j=0;j<n_pop;j++)
       {
@@ -387,11 +400,13 @@ cout<<"saliendo del loop m"<<endl;
             } // else:  continua con una nueva generacion
       */
       // Calcula las Probabilities
+      cout<<" --> Calculating probabilities to be choosen for each element "<<endl;
       Probabilities[0]=0.0;
       for(j=1;j<n_pop+1;j++)
       {
          Probabilities[j]=Fit[j-1]+Probabilities[j-1];
       }
+      cout<<" --> Chosing a random element of the population "<<endl;
       // rouleta
       eleccion=random_number(0,Probabilities[n_pop+1]);
       for(j=0;j<n_pop;j++)
@@ -401,10 +416,10 @@ cout<<"saliendo del loop m"<<endl;
             elegido=j;
          }
       }
+      cout<<" --> entering while "<<endl;
       contenido=0;
       while(contenido!=1)
       {
-cout<<"entering while loop"<<endl;
          if( random_number(0,1)<mate_mutate_ratio ) //Then mate
          {
             //Code for mating
@@ -418,7 +433,7 @@ cout<<"entering while loop"<<endl;
                   elegido2=j;
                }
             }
-cout<<"performing crossover"<<endl;
+            cout<<" --> Mating choosen elements: "<<elegido<<" with "<<elegido2<<endl;
             new_cluster=Crossover(clus[elegido],clus[elegido2]);
             ////////////////// Bloque de código a copiar en mutate //////////////////
             path=file_name+"/Generation"+to_string(i);
@@ -429,6 +444,7 @@ cout<<"performing crossover"<<endl;
             command=path+"/tmp_dir/geometry.in";
             new_cluster.print_fhi(command);
             command.clear();
+            cout<<" --> Relaxing son element "<<endl;
             command="cd "+path+"/tmp_dir ; ./run.sh";
             system(command.c_str());
             command.clear();
@@ -437,7 +453,6 @@ cout<<"performing crossover"<<endl;
             command.clear();
             command="grep \" | Total energy of the DFT \" "+path+"/tmp_dir/output.out | awk '{print $12}' ";
             new_cluster_energy=double_pipe(command.c_str());
-cout<<"FALG"<<endl;
             // cp geometry.in   2 grep            /////////////////////////////////////////////////////////////////////////
          }
          else // Assumes is mutate
@@ -449,10 +464,12 @@ cout<<"FALG"<<endl;
                   if(N_Simbolo_1>=N_Simbolo_2)
                   {
                      clus[elegido].swap(N_Simbolo_2);
+                     cout<<" --> Swapping atoms of selected element "<<elegido<<endl;
                   }
                   else
                   {
                      clus[elegido].swap(N_Simbolo_1);
+                     cout<<" --> Swapping atoms of selected element "<<elegido<<endl;
                   }
                   clus[elegido].print_xyz("tmp.xyz");
                   new_cluster.read_xyz("tmp.xyz");
@@ -466,10 +483,12 @@ cout<<"FALG"<<endl;
                      clus[elegido].print_xyz("tmp.xyz");
                      new_cluster.read_xyz("tmp.xyz");
                      system("rm tmp.xyz");
+                     cout<<" --> Kicking atoms of selected element "<<elegido<<endl;
                   }
                   else // twist
                   {
                      new_cluster=Crossover(clus[elegido],clus[elegido]);
+                     cout<<" --> Twisting selected cluster "<<elegido<<endl;
                   }
 
                }
@@ -482,10 +501,12 @@ cout<<"FALG"<<endl;
                   clus[elegido].print_xyz("tmp.xyz");
                   new_cluster.read_xyz("tmp.xyz");
                   system("rm tmp.xyz");
+                  cout<<" --> Kicking atoms of selected element "<<elegido<<endl;
                }
                else // twist
                {
                   new_cluster=Crossover(clus[elegido],clus[elegido]);
+                  cout<<" --> Twisting selected cluster "<<elegido<<endl;
                }
             }
             ////////////////// Bloque de código a copiar en mutate //////////////////
@@ -505,29 +526,25 @@ cout<<"FALG"<<endl;
             command.clear();
             command="grep \" | Total energy of the DFT \" "+path+"/tmp_dir/output.out | awk '{print $12}' ";
             new_cluster_energy=double_pipe(command.c_str());
-    cout<<"FALG"<<endl;
-            // cp geometry.in   2 grep
             /////////////////////////////////////////////////////////////////////////
          }
-         cout<<" entrando al selector de configuraciones"<<endl;
       if(new_cluster_energy<max_tmp)
       {
+         cout<<" --> Starting generation "<<to_string(i+1)<<endl;
          command.clear();
          command="cp -r "+file_name+"/Generation"+to_string(i)+" "+file_name+"/Generation"+to_string(i+1);
          system(command.c_str());
          command.clear();
          command="cd "+file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+" ; ";
-         command+="rm geometry.in* ; mv ../tmp_dir/* .";
+         command+="rm * ; mv ../tmp_dir/* .";
          system(command.c_str());
          command.clear();
          command=file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/geometry.in.next_step";
-cout<<"reading clus geometry next step"<<endl;
          clus[id_max].read_fhi(command);
          command.clear();
          command=file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/relaxed_coordinates.xyz";
          tag.clear();
          tag=" Iteration "+to_string(id_max)+" -----> Energy = "+to_string(new_cluster_energy)+" eV ";
-cout<<"writing clus geometry next step"<<endl;
          clus[id_max].print_xyz(command,tag);
          command.clear();
          i++;
