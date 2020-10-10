@@ -241,10 +241,11 @@ else
             clus[element].centroid();
             clus[element].move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus[element].z_min());
             geometry_file.clear();
-            geometry_file=file_name+"/Generation1/E"+to_string(element)+"/geometry.in";
-            clus[element].print_fhi(geometry_file);
-            command="cat "+file_name+"/crystal.in > "+geometry_file+" ; sed '/atom/a initial_moment 0.5' "+file_name;
-            command+="/geometry.tmp >> "+geometry_file+" ; rm "+file_name+"/geometry.tmp" ;
+            geometry_file=file_name+"/Generation1/E"+to_string(element)+"/geometry.temp";
+            clus[element].print_fhi(geometry_file); command.clear();
+            command="cat "+file_name+"/crystal.in > "+file_name+"/Generation1/E"+to_string(element)+"/geometry.in ; ";
+            command+=" sed '/atom/a initial_moment 0.5' "+geometry_file+" >> "+file_name+"/Generation1/E"+to_string(element)+"/geometry.in";
+            command+=" ; rm "+geometry_file;
             system(command.c_str());
             command.clear();
          }
@@ -273,39 +274,41 @@ if(i==1)
       command="grep 'Have a nice day' "+file_name+"/Generation1/E"+to_string(m)+"/output.out | wc -l";
       contenido=int_pipe(command.c_str());
       command.clear();
+
       while(contenido!=1)
        {
+          cout<<" --> Failed SCF of element "<<m<<". Generating a new structure"<<endl;
          if(N_Simbolo_2>0)  // For bimetallic cases
          {
             if(randomness==1)  // Fully random
             {
                cout<<"   --> Cluster "<<m<<" created using fully random generator "<<endl;
-               clus[element].srand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
+               clus[m].srand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
                if(lj!=0)
                {
                   cout<<"   --> Optimizing geometry with L-J potential "<<endl;
-                  clus[element].geometry_optimization();
+                  clus[m].geometry_optimization();
                }
             }
             else if(randomness==0)//pseudorandomly (cuts Au80 cluster)
             {
                cout<<"   --> Cluster "<<m<<" created cleaving Au80 cluster until get the required number of atoms"<<endl;
-               clus[element].rand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
-               clus[element].kick(step_width);
+               clus[m].rand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
+               clus[m].kick(step_width);
                if(lj!=0)
                {
                   cout<<"   --> Optimizing geometry with L-J potential "<<endl;
-                  clus[element].geometry_optimization();
+                  clus[m].geometry_optimization();
                }
             }
             else if(randomness==2)// Roy-based generator
             {
                cout<<"   --> Cluster "<<m<<" created using random generator based on Roy Jhonston "<<endl;
-               clus[element].roy_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
+               clus[m].roy_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
                if(lj!=0)
                {
                   cout<<"   --> Optimizing geometry with L-J potential "<<endl;
-                  clus[element].geometry_optimization();
+                  clus[m].geometry_optimization();
                }
             }
          }
@@ -314,52 +317,53 @@ if(i==1)
             if(randomness==1)  // fully random
             {
                cout<<"   --> Cluster "<<m<<" created using fully random generator "<<endl;
-               clus[element].srand_generator(Simbolo_1,N_Simbolo_1);
+               clus[m].srand_generator(Simbolo_1,N_Simbolo_1);
                if(lj!=0)
                {
                   cout<<"   --> Optimizing geometry with L-J potential "<<endl;
-                  clus[element].geometry_optimization();
+                  clus[m].geometry_optimization();
                }
             }
             else if(randomness==0)//pseudorandomly (cuts Au80 cluster)
             {
                cout<<"   --> Cluster "<<m<<" created cleaving Au80 cluster until get the required number of atoms"<<endl;
-               clus[element].rand_generator(Simbolo_1,N_Simbolo_1);
-               clus[element].kick(step_width);
+               clus[m].rand_generator(Simbolo_1,N_Simbolo_1);
+               clus[m].kick(step_width);
                if(lj!=0)
                {
                   cout<<"   --> Optimizing geometry with L-J potential "<<endl;
-                  clus[element].geometry_optimization();
+                  clus[m].geometry_optimization();
                }
             }
             else if(randomness==2)// Roy-based generator
             {
                cout<<"   --> Cluster "<<m<<" created using random generator based on Roy Jhonston "<<endl;
-               clus[element].roy_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
+               clus[m].roy_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
                if(lj!=0)
                {
                   cout<<"   --> Optimizing geometry with L-J potential "<<endl;
-                  clus[element].geometry_optimization();
+                  clus[m].geometry_optimization();
                }
             }
          }
          if(crystal==0)
          {
-            clus[element].centroid();
+            clus[m].centroid();
             geometry_file.clear();
-            geometry_file=file_name+"/Generation1/E"+to_string(element)+"/geometry.in";
-            clus[element].print_fhi(geometry_file);
+            geometry_file=file_name+"/Generation1/E"+to_string(m)+"/geometry.in";
+            clus[m].print_fhi(geometry_file);
          }
          else{
-            clus[element].centroid();
-            clus[element].move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus[element].z_min());
-            geometry_file.clear();
-            geometry_file=file_name+"/Generation1/E"+to_string(element)+"/geometry.temp";
-            clus[element].print_fhi(geometry_file);
-            command="sed '/atom/a initial_moment 0.5' "+file_name+"/crystal.in >> "+geometry_file;
-            command+=" ; mv "+geometry_file+" "+file_name+"/tmp_dir/geometry.in";
-            system(command.c_str());
-            command.clear();
+           clus[m].centroid();
+           clus[m].move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus[m].z_min());
+           geometry_file.clear();
+           geometry_file=file_name+"/Generation1/E"+to_string(m)+"/geometry.temp";
+           clus[m].print_fhi(geometry_file); command.clear();
+           command="cat "+file_name+"/crystal.in > "+file_name+"/Generation1/E"+to_string(m)+"/geometry.in ; ";
+           command+=" sed '/atom/a initial_moment 0.5' "+geometry_file+" >> "+file_name+"/Generation1/E"+to_string(m)+"/geometry.in";
+           command+=" ; rm "+geometry_file;
+           system(command.c_str());
+           command.clear();
          }
          command.clear();
          command="cd "+file_name+"/Generation1/E"+to_string(m)+" ; ./run.sh";
@@ -371,11 +375,10 @@ if(i==1)
          command.clear();
 
        }
-
+      cout<<" --> Relaxation of element "<<m<<" done! "<<endl;
    }
 }
    cout<<" --> Initial generation: DONE! "<<endl;
-   cout<<" --> AG-DFT routine starts here "<<endl;
    cout<<"  "<<endl;
 
    cout<<"================================================================================================"<<endl;
@@ -391,6 +394,7 @@ if(i==1)
       cout<<" --> Reading energies from last generation "<<endl;
       for(m=0;m<n_pop;m++)
       {
+cout<<"m "<<m<<endl;
          command="grep \" | Total energy of the DFT \" "+file_name+"/Generation"+to_string(i)+"/E"+to_string(m)+"/output.out | awk '{print $12}' ";
          Energies[m]=double_pipe(command.c_str());
          m_str=to_string(m);
@@ -399,19 +403,19 @@ if(i==1)
          command=file_name+"/Generation"+to_string(i)+"/E"+to_string(m)+"/geometry.in.next_step";
          if(crystal==0) // Gas phase
          {
-            clus[element].read_fhi(command);
+            clus[m].read_fhi(command);
          }
          else // Crystal
          {
             if(N_Simbolo_2>0)
             {
-               clus_1=extract(geometry_file,Simbolo_1);
-               clus_2=extract(geometry_file,Simbolo_2);
-               clus[element]  =clus_1+clus_2;
+               clus_1=extract(command,Simbolo_1);
+               clus_2=extract(command,Simbolo_2);
+               clus[m]  =clus_1+clus_2;
             }
             else // for monometallics:
             {
-               clus[element]=extract(geometry_file,Simbolo_1);
+               clus[m]=extract(command,Simbolo_1);
             }
          }
          command.clear();
@@ -553,17 +557,20 @@ if(i==1)
                command=path+"/tmp_dir/geometry.in";
                new_cluster.centroid();
                new_cluster.print_fhi(command);
+               command.clear();
             }
             else
             {
               //codigo para cristal
-              geometry_file.clear(); geometry_file=file_name+"/tmp_dir/geometry.tmp";
               new_cluster.centroid();
               new_cluster.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus[element].z_min());
+              geometry_file.clear(); geometry_file=file_name+"/tmp_dir/geometry.tmp";
               new_cluster.print_fhi(geometry_file);
-              command="sed '/atom/a initial_moment 0.5' "+file_name+"/crystal.in >> "+geometry_file;
-              command+=" ; mv "+geometry_file+" "+file_name+"/tmp_dir/geometry.in";
+              command="cat "+file_name+"/crystal.in > "+file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.in ; ";
+              command+=" sed '/atom/a initial_moment 0.5' "+geometry_file+" >> "+file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.in";
+              command+=" ; rm "+geometry_file;
               system(command.c_str());
+              command.clear();
             }
             command.clear();
             cout<<" --> Relaxing son element "<<endl;
@@ -642,17 +649,20 @@ if(i==1)
                command=path+"/tmp_dir/geometry.in";
                new_cluster.centroid();
                new_cluster.print_fhi(command);
+               command.clear();
             }
             else
             {
               //codigo para cristal
-              geometry_file.clear(); geometry_file=file_name+"/tmp_dir/geometry.tmp";
               new_cluster.centroid();
               new_cluster.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus[element].z_min());
+              geometry_file.clear(); geometry_file=file_name+"/tmp_dir/geometry.tmp";
               new_cluster.print_fhi(geometry_file);
-              command="sed '/atom/a initial_moment 0.5' "+file_name+"/crystal.in >> "+geometry_file;
-              command+=" ; mv "+geometry_file+" "+file_name+"/tmp_dir/geometry.in";
+              command="cat "+file_name+"/crystal.in > "+file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.in ; ";
+              command+=" sed '/atom/a initial_moment 0.5' "+geometry_file+" >> "+file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.in";
+              command+=" ; rm "+geometry_file;
               system(command.c_str());
+              command.clear();
             }
             command.clear();
             cout<<" --> Relaxing son element "<<endl;
@@ -665,7 +675,7 @@ if(i==1)
             command="grep \" | Total energy of the DFT \" "+path+"/tmp_dir/output.out | awk '{print $12}' ";
             new_cluster_energy=double_pipe(command.c_str());
             /////////////////////////////////////////////////////////////////////////
-         }
+      }
       if(new_cluster_energy<max_tmp)
       {
          if(i+1 <= iteraciones)
@@ -673,6 +683,11 @@ if(i==1)
             cout<<"================================================================================================"<<endl;
             cout<<" --> Starting generation "<<to_string(i+1)<<endl;
             cout<<"================================================================================================"<<endl;
+         // Writing the minimum energy of the current generation
+         command.clear(); command=" cp "+file_name+"/Generation"+to_string(i)+" "+file_name+"/Generation"+to_string(i+1);
+         command+="/E"+to_string(min_tmp)+"/relaxed_coordinates.xyz "+file_name+"/Generation"+to_string(i)+" ";
+         command+=file_name+"/Generation"+to_string(i+1)+"/minimum_energy.xyz";
+         system(command.c_str());
          command.clear();
          command="cp -r "+file_name+"/Generation"+to_string(i)+" "+file_name+"/Generation"+to_string(i+1);
          system(command.c_str());
