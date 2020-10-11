@@ -716,7 +716,7 @@ cout<<" prob max"<<Probabilities[n_pop]<<endl;
             cout<<"================================================================================================"<<endl;
 
          // Writing the minimum energy of the current generation
-         command.clear(); command=" cp "+file_name+"/Generation"+to_string(i)+" "+file_name+"/Generation"+to_string(i+1);
+         command.clear(); command=" cp -r "+file_name+"/Generation"+to_string(i)+" "+file_name+"/Generation"+to_string(i+1);
          system(command.c_str());
          command.clear();
          command="cp "+file_name+"/Generation"+to_string(i)+"/E"+to_string(min_tmp)+"/relaxed_coordinates.xyz "+file_name;
