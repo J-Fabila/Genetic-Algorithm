@@ -715,11 +715,10 @@ cout<<" prob max"<<Probabilities[n_pop]<<endl;
             cout<<"================================================================================================"<<endl;
 
          // Writing the minimum energy of the current generation
-         command.clear(); command=" cp -r "+file_name+"/Generation"+to_string(i)+" "+file_name+"/Generation"+to_string(i+1);
+         command="cp "+file_name+"/Generation"+to_string(i)+"/E"+to_string(id_min)+"/relaxed_coordinates.xyz "+file_name;
+         command+="/Generation"+to_string(i)+"/minimum_energy.xyz";
          system(command.c_str());
          command.clear();
-         command="cp "+file_name+"/Generation"+to_string(i)+"/E"+to_string(min_tmp)+"/relaxed_coordinates.xyz "+file_name;
-         command+="/Generation"+to_string(i)+"/minimum_energy.xyz";
          // Obtiene la energia anterior
          EnergiaAnterior=min_tmp;
          command.clear();
