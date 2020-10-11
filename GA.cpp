@@ -21,7 +21,7 @@ string initialization_file, outputfile, m_str, i_str, E_str, tag, path;
 int continue_alg,  Ncore, randomness, kick, iteraciones,swap_step, contenido, previus;
 int m, lj, N_Simbolo_1, N_Simbolo_2, count, fail_counter=0, resto, failed_max,crystal;
 int n_pop, element, fit_function, init;
-float step_width, Temperature, Energy, Energia, EnergiaAnterior, k_BT, damp ;
+float step_width, Temperature, Energy, Energia, EnergiaActual, EnergiaAnterior, delta_E, k_BT, damp ;
 float x_min,y_min,z_min,x_max,y_max,z_max;
 Cluster clus_1, clus_2, c_aux;
 Crystal cristal;
@@ -50,6 +50,7 @@ iteraciones=int_pipe("grep 'iterations' input.bh | cut -d \"=\" -f2 | awk '{prin
 swap_step=int_pipe("grep 'swap_step' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 lj=int_pipe("grep 'lennard-jones_aid' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 crystal=int_pipe("cd input ; if [ -f crystal.in ]  ; then echo 1  ;  fi ");
+delta_E=float_pipe("grep 'delta_E' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 Cluster clus[n_pop], new_cluster;
 double Fit[n_pop], Probabilities[n_pop+1], rho[n_pop], a_exp, a_lin, fit_max, fit_min;
 double Energies[n_pop], max_tmp, min_tmp, current, new_cluster_energy;
@@ -397,6 +398,7 @@ if(i==1)
 cout<<"m "<<m<<endl;
          command="grep \" | Total energy of the DFT \" "+file_name+"/Generation"+to_string(i)+"/E"+to_string(m)+"/output.out | awk '{print $12}' ";
          Energies[m]=double_pipe(command.c_str());
+cout<<"E "<<Energies[m]<<endl;
          m_str=to_string(m);
          E_str=string_pipe(command); //Better for Energies with all the value
          command.clear();
@@ -422,7 +424,8 @@ cout<<"m "<<m<<endl;
          command=file_name+"/Generation"+to_string(i)+"/E"+to_string(m)+"/relaxed_coordinates.xyz";
          tag.clear();
          tag=" Iteration "+m_str+" -----> Energy = "+E_str+" eV ";
-         clus[element].print_xyz(command,tag);
+  cout<<"tag "<<tag<<endl;
+         clus[m].print_xyz(command,tag);
          command.clear();
          command="echo '"+to_string(m)+" ---->' "+E_str+" >> "+file_name+"/Generation"+to_string(i)+"/energies.txt";
          system(command.c_str());
@@ -439,6 +442,7 @@ cout<<"m "<<m<<endl;
             max_tmp=current;
          }
       }
+cout<<" E max "<<max_tmp<<endl;
       // Get Maximum index
       for(j=0;j<n_pop;j++)
       {
@@ -447,16 +451,19 @@ cout<<"m "<<m<<endl;
             id_max=j;
          }
       }
+cout<<" E max ind "<<id_max<<endl;
       // Get Minimum Energy Value
       min_tmp=Energies[0];
       for(j=1;j<n_pop;j++)
       {
          current=Energies[j];
-         if( current > min_tmp )
+         if( current < min_tmp )
          {
             min_tmp=current;
          }
       }
+  cout<<" E min "<<min_tmp<<endl;
+  EnergiaActual=min_tmp;
       // Get Minimum index
       for(j=0;j<n_pop;j++)
       {
@@ -465,11 +472,13 @@ cout<<"m "<<m<<endl;
             id_min=j;
          }
       }
+cout<<" E min ind "<<id_min<<endl;
       // Calcula rho
       cout<<" --> Normalizing energies from last generation"<<endl;
-      for(j=1;j<n_pop;j++)
+      for(j=0;j<n_pop;j++)
       {
          rho[j]=(Energies[j]-min_tmp)/(max_tmp-min_tmp);
+cout<<" ----------> RHO "<<rho[j]<<endl;
       }
       // rho_max=1; rho_min=0;
       cout<<" --> Calculating Fit values with ";
@@ -491,14 +500,17 @@ cout<<"m "<<m<<endl;
          if(fit_function==0) // Exponential
          {
             Fit[j]=exp(a_exp*rho[j]);
+cout<<" ----------> FIT "<<Fit[j]<<endl;
          }
          else if(fit_function==1) // Linear
          {
             Fit[j]=1-(a_lin*rho[j]);
+cout<<" ----------> FIT "<<Fit[j]<<endl;
          }
          else if(fit_function==2) // tanh
          {
             Fit[j]=(0.5)*(1-tanh(2.0*rho[j]-1));
+cout<<" ----------> FIT "<<Fit[j]<<endl;
          }
       }
       /*
@@ -512,39 +524,55 @@ cout<<"m "<<m<<endl;
       // Calcula las Probabilities
       cout<<" --> Calculating probabilities to be choosen for each element "<<endl;
       Probabilities[0]=0.0;
+cout<<" ----------> PROB "<<0<<" "<<Probabilities[0]<<endl;
       for(j=1;j<n_pop+1;j++)
       {
          Probabilities[j]=Fit[j-1]+Probabilities[j-1];
+cout<<" ----------> PROB "<<j<<" "<<Probabilities[j]<<endl;
       }
       cout<<" --> Chosing a random element of the population "<<endl;
       // rouleta
-      eleccion=random_number(0,Probabilities[n_pop+1]);
+      eleccion=random_number(0,Probabilities[n_pop]);
+cout<<" eleccion random "<<random_number(0,Probabilities[n_pop])<<"  "<<n_pop<<endl;;
+cout<<eleccion <<endl;
       for(j=0;j<n_pop;j++)
       {
+cout<<Probabilities[j]<<" --> "<<Probabilities[j+1]<<endl;
          if((Probabilities[j] <= eleccion) && (eleccion < Probabilities[j+1]))
          {
             elegido=j;
          }
       }
+cout<<" elegido "<<elegido<<endl;
       contenido=0;
+cout<<" prob max"<<Probabilities[n_pop]<<endl;
       while(contenido!=1)
       {
         cout<<"Starting new while cycle"<<endl;
          if( random_number(0,1)<mate_mutate_ratio ) //Then mate
          {
             //Code for mating
-            // Elige al segundo padre
-            // Other rouleta
-            eleccion=random_number(0,Probabilities[n_pop+1]);
-            for(j=0;j<n_pop;j++)
+            elegido2=elegido;
+            while (elegido2==elegido)
             {
-               if(((Probabilities[j] < eleccion) && (eleccion < Probabilities[j+1]) ) && (j!=elegido))
+               // Elige al segundo padre
+               // Other rouleta
+    //  cout<<" elegido2 "<<elegido2<<endl;
+               eleccion=random_number(0,Probabilities[n_pop]);
+  //cout<<" eleccion "<<eleccion<<endl;
+               for(j=0;j<n_pop;j++)
                {
-                  elegido2=j;
+                  if(((Probabilities[j] < eleccion) && (eleccion < Probabilities[j+1]) ) )
+                  {
+                     elegido2=j;
+  //                   cout<<"  "<<elegido2<<endl;
+
+                  }
                }
             }
             cout<<" --> Mating choosen elements: "<<elegido<<" with "<<elegido2<<endl;
             new_cluster=Crossover(clus[elegido],clus[elegido2]);
+      cout<<" performed crossover "<<endl;
             ////////////////// Bloque de código a copiar en mutate //////////////////
             path=file_name+"/Generation"+to_string(i);
             command.clear(); command="cd "+path+" ; cp ../run.sh tmp_dir/";
@@ -563,8 +591,8 @@ cout<<"m "<<m<<endl;
             {
               //codigo para cristal
               new_cluster.centroid();
-              new_cluster.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus[element].z_min());
-              geometry_file.clear(); geometry_file=file_name+"/tmp_dir/geometry.tmp";
+              new_cluster.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-new_cluster.z_min());
+              geometry_file.clear(); geometry_file=file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.tmp";
               new_cluster.print_fhi(geometry_file);
               command="cat "+file_name+"/crystal.in > "+file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.in ; ";
               command+=" sed '/atom/a initial_moment 0.5' "+geometry_file+" >> "+file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.in";
@@ -638,6 +666,8 @@ cout<<"m "<<m<<endl;
                }
             }
             ////////////////// Bloque de código a copiar en mutate //////////////////
+  cout<<" empezando codigo bloque "<<endl;
+            path.clear();
             path=file_name+"/Generation"+to_string(i);
             command.clear(); command="cd "+path+" ; cp ../run.sh tmp_dir/";
             command+=" ; cp ../control.in tmp_dir/";
@@ -654,9 +684,10 @@ cout<<"m "<<m<<endl;
             else
             {
               //codigo para cristal
+  cout<<"codigo cristal"<<endl;
               new_cluster.centroid();
-              new_cluster.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus[element].z_min());
-              geometry_file.clear(); geometry_file=file_name+"/tmp_dir/geometry.tmp";
+              new_cluster.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-new_cluster.z_min());
+              geometry_file.clear(); geometry_file=file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.tmp";
               new_cluster.print_fhi(geometry_file);
               command="cat "+file_name+"/crystal.in > "+file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.in ; ";
               command+=" sed '/atom/a initial_moment 0.5' "+geometry_file+" >> "+file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.in";
@@ -683,11 +714,15 @@ cout<<"m "<<m<<endl;
             cout<<"================================================================================================"<<endl;
             cout<<" --> Starting generation "<<to_string(i+1)<<endl;
             cout<<"================================================================================================"<<endl;
+
          // Writing the minimum energy of the current generation
          command.clear(); command=" cp "+file_name+"/Generation"+to_string(i)+" "+file_name+"/Generation"+to_string(i+1);
-         command+="/E"+to_string(min_tmp)+"/relaxed_coordinates.xyz "+file_name+"/Generation"+to_string(i)+" ";
-         command+=file_name+"/Generation"+to_string(i+1)+"/minimum_energy.xyz";
          system(command.c_str());
+         command.clear();
+         command="cp "+file_name+"/Generation"+to_string(i)+"/E"+to_string(min_tmp)+"/relaxed_coordinates.xyz "+file_name;
+         command+="/Generation"+to_string(i)+"/minimum_energy.xyz";
+         // Obtiene la energia anterior
+         EnergiaAnterior=min_tmp;
          command.clear();
          command="cp -r "+file_name+"/Generation"+to_string(i)+" "+file_name+"/Generation"+to_string(i+1);
          system(command.c_str());
