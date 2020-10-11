@@ -168,7 +168,7 @@ else
                clus[element].srand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
                if(lj!=0)
                {
-                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  cout<<"     --> Optimizing geometry with L-J potential "<<endl;
                   clus[element].geometry_optimization();
                }
             }
@@ -179,7 +179,7 @@ else
                clus[element].kick(step_width);
                if(lj!=0)
                {
-                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  cout<<"     --> Optimizing geometry with L-J potential "<<endl;
                   clus[element].geometry_optimization();
                }
             }
@@ -189,7 +189,7 @@ else
                clus[element].roy_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
                if(lj!=0)
                {
-                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  cout<<"     --> Optimizing geometry with L-J potential "<<endl;
                   clus[element].geometry_optimization();
                }
             }
@@ -256,14 +256,14 @@ else
 
 if(i==1)
 {
-   cout<<" --> Starting FHI-aims calculations "<<endl;
+   cout<<" --> Starting FHI-aims calculations for first generation "<<endl;
    command="echo 'Step ----> Energy[eV]' >> "+file_name+"/Generation1/energies.txt ";
    system(command.c_str());
    command.clear();
    // running
    for(m=m;m<n_pop;m++)
    {
-      cout<<" --> Performing relaxation of element "<<m<<endl;
+      cout<<"   --> Performing relaxation of element "<<m<<endl;
       command.clear();
       command="cd "+file_name+"/Generation1/E"+to_string(m)+" ; cp ../../run.sh .";
       command+=" ; cp ../../control.in .";
@@ -278,37 +278,37 @@ if(i==1)
 
       while(contenido!=1)
        {
-          cout<<" --> Failed SCF of element "<<m<<". Generating a new structure"<<endl;
+          cout<<"     --> Failed SCF of element "<<m<<". Generating a new structure"<<endl;
          if(N_Simbolo_2>0)  // For bimetallic cases
          {
             if(randomness==1)  // Fully random
             {
-               cout<<"   --> Cluster "<<m<<" created using fully random generator "<<endl;
+               cout<<"     --> Cluster "<<m<<" created using fully random generator "<<endl;
                clus[m].srand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
                if(lj!=0)
                {
-                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  cout<<"       --> Optimizing geometry with L-J potential "<<endl;
                   clus[m].geometry_optimization();
                }
             }
             else if(randomness==0)//pseudorandomly (cuts Au80 cluster)
             {
-               cout<<"   --> Cluster "<<m<<" created cleaving Au80 cluster until get the required number of atoms"<<endl;
+               cout<<"     --> Cluster "<<m<<" created cleaving Au80 cluster until get the required number of atoms"<<endl;
                clus[m].rand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
                clus[m].kick(step_width);
                if(lj!=0)
                {
-                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  cout<<"       --> Optimizing geometry with L-J potential "<<endl;
                   clus[m].geometry_optimization();
                }
             }
             else if(randomness==2)// Roy-based generator
             {
-               cout<<"   --> Cluster "<<m<<" created using random generator based on Roy Jhonston "<<endl;
+               cout<<"     --> Cluster "<<m<<" created using random generator based on Roy Jhonston "<<endl;
                clus[m].roy_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
                if(lj!=0)
                {
-                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  cout<<"       --> Optimizing geometry with L-J potential "<<endl;
                   clus[m].geometry_optimization();
                }
             }
@@ -317,32 +317,32 @@ if(i==1)
          {
             if(randomness==1)  // fully random
             {
-               cout<<"   --> Cluster "<<m<<" created using fully random generator "<<endl;
+               cout<<"     --> Cluster "<<m<<" created using fully random generator "<<endl;
                clus[m].srand_generator(Simbolo_1,N_Simbolo_1);
                if(lj!=0)
                {
-                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  cout<<"       --> Optimizing geometry with L-J potential "<<endl;
                   clus[m].geometry_optimization();
                }
             }
             else if(randomness==0)//pseudorandomly (cuts Au80 cluster)
             {
-               cout<<"   --> Cluster "<<m<<" created cleaving Au80 cluster until get the required number of atoms"<<endl;
+               cout<<"     --> Cluster "<<m<<" created cleaving Au80 cluster until get the required number of atoms"<<endl;
                clus[m].rand_generator(Simbolo_1,N_Simbolo_1);
                clus[m].kick(step_width);
                if(lj!=0)
                {
-                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  cout<<"       --> Optimizing geometry with L-J potential "<<endl;
                   clus[m].geometry_optimization();
                }
             }
             else if(randomness==2)// Roy-based generator
             {
-               cout<<"   --> Cluster "<<m<<" created using random generator based on Roy Jhonston "<<endl;
+               cout<<"     --> Cluster "<<m<<" created using random generator based on Roy Jhonston "<<endl;
                clus[m].roy_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
                if(lj!=0)
                {
-                  cout<<"   --> Optimizing geometry with L-J potential "<<endl;
+                  cout<<"       --> Optimizing geometry with L-J potential "<<endl;
                   clus[m].geometry_optimization();
                }
             }
@@ -376,7 +376,7 @@ if(i==1)
          command.clear();
 
        }
-      cout<<" --> Relaxation of element "<<m<<" done! "<<endl;
+      cout<<"   --> Relaxation of element "<<m<<" done! "<<endl;
    }
 }
    cout<<" --> Initial generation: DONE! "<<endl;
@@ -514,10 +514,9 @@ cout<<" ----------> FIT "<<Fit[j]<<endl;
          }
       }
       /*
-      criterio=EnergiaAnterior-EnergiaActual;
-            if(criterio<umbral)
+            if((EnergiaAnterior-EnergiaActual)<delta_E)
             {
-               cout<<" terminando AG"
+               cout<<"  --> Stopping Genetic Algorithm: delta E reached "<<endl;
                break;
             } // else:  continua con una nueva generacion
       */
