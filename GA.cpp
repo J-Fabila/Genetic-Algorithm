@@ -706,7 +706,7 @@ cout<<" prob max"<<Probabilities[n_pop]<<endl;
             new_cluster_energy=double_pipe(command.c_str());
             /////////////////////////////////////////////////////////////////////////
       }
-      if(new_cluster_energy<max_tmp)
+      if((contenido==1) && (new_cluster_energy<max_tmp))
       {
          if(i+1 <= iteraciones)
          {
