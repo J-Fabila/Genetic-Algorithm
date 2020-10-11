@@ -380,25 +380,16 @@ if(i==1)
    }
 }
    cout<<" --> Initial generation: DONE! "<<endl;
-   cout<<"  "<<endl;
-
-   cout<<"================================================================================================"<<endl;
-   cout<<"GA-DFT routine starts here! "<<endl;
-   cout<<"Note: "<<endl;
-   cout<<"For monometallic clusters: only random xyz moves and twists will be applied "<<endl;
-   cout<<"For bimetallic clusters  : atomic swap will be performed randomly with probability "<<swap_ratio<<endl;
-   cout<<"================================================================================================\n"<<endl;
 
    while( i<iteraciones+1)
    {
       // Get energies from last iteration
-      cout<<" --> Reading energies from last generation "<<endl;
+      cout<<" --> Reading energies of current generation "<<endl;
       for(m=0;m<n_pop;m++)
       {
-cout<<"m "<<m<<endl;
          command="grep \" | Total energy of the DFT \" "+file_name+"/Generation"+to_string(i)+"/E"+to_string(m)+"/output.out | awk '{print $12}' ";
          Energies[m]=double_pipe(command.c_str());
-cout<<"E "<<Energies[m]<<endl;
+         cout<<"   --> Energy of element "<<m<<"/"<<n_pop<<" = "<<Energies[m]<<" eV "<<endl;
          m_str=to_string(m);
          E_str=string_pipe(command); //Better for Energies with all the value
          command.clear();
@@ -424,7 +415,6 @@ cout<<"E "<<Energies[m]<<endl;
          command=file_name+"/Generation"+to_string(i)+"/E"+to_string(m)+"/relaxed_coordinates.xyz";
          tag.clear();
          tag=" Iteration "+m_str+" -----> Energy = "+E_str+" eV ";
-  cout<<"tag "<<tag<<endl;
          clus[m].print_xyz(command,tag);
          command.clear();
          command="echo '"+to_string(m)+" ---->' "+E_str+" >> "+file_name+"/Generation"+to_string(i)+"/energies.txt";
@@ -442,7 +432,7 @@ cout<<"E "<<Energies[m]<<endl;
             max_tmp=current;
          }
       }
-cout<<" E max "<<max_tmp<<endl;
+      cout<<"   --> Maximum Energy = "<<max_tmp;
       // Get Maximum index
       for(j=0;j<n_pop;j++)
       {
@@ -451,7 +441,7 @@ cout<<" E max "<<max_tmp<<endl;
             id_max=j;
          }
       }
-cout<<" E max ind "<<id_max<<endl;
+      cout<<" (element "<<id_max<<")"<<endl;
       // Get Minimum Energy Value
       min_tmp=Energies[0];
       for(j=1;j<n_pop;j++)
@@ -462,7 +452,7 @@ cout<<" E max ind "<<id_max<<endl;
             min_tmp=current;
          }
       }
-  cout<<" E min "<<min_tmp<<endl;
+  cout<<"   --> Maximum Energy = "<<min_tmp;
   EnergiaActual=min_tmp;
       // Get Minimum index
       for(j=0;j<n_pop;j++)
@@ -472,13 +462,12 @@ cout<<" E max ind "<<id_max<<endl;
             id_min=j;
          }
       }
-cout<<" E min ind "<<id_min<<endl;
+      cout<<" (element "<<id_min<<")"<<endl;
       // Calcula rho
       cout<<" --> Normalizing energies from last generation"<<endl;
       for(j=0;j<n_pop;j++)
       {
          rho[j]=(Energies[j]-min_tmp)/(max_tmp-min_tmp);
-cout<<" ----------> RHO "<<rho[j]<<endl;
       }
       // rho_max=1; rho_min=0;
       cout<<" --> Calculating Fit values with ";
@@ -500,57 +489,49 @@ cout<<" ----------> RHO "<<rho[j]<<endl;
          if(fit_function==0) // Exponential
          {
             Fit[j]=exp(a_exp*rho[j]);
-cout<<" ----------> FIT "<<Fit[j]<<endl;
+            cout<<"   --> Fit value of element "<<j<<" = "<<Fit[j]<<endl;
          }
          else if(fit_function==1) // Linear
          {
             Fit[j]=1-(a_lin*rho[j]);
-cout<<" ----------> FIT "<<Fit[j]<<endl;
+            cout<<"   --> Fit value of element "<<j<<" = "<<Fit[j]<<endl;
          }
          else if(fit_function==2) // tanh
          {
             Fit[j]=(0.5)*(1-tanh(2.0*rho[j]-1));
-cout<<" ----------> FIT "<<Fit[j]<<endl;
+            cout<<"   --> Fit value of element "<<m<<" = "<<Fit[j]<<endl;
          }
       }
-      /*
-            if((EnergiaAnterior-EnergiaActual)<delta_E)
-            {
-               cout<<"  --> Stopping Genetic Algorithm: delta E reached "<<endl;
-               break;
-            } // else:  continua con una nueva generacion
-      */
+      if((EnergiaAnterior-EnergiaActual)<delta_E)
+      {
+         cout<<" --> Stopping Genetic Algorithm: delta E reached "<<endl;
+         break;
+      } // else:  continua con una nueva generacion
       // Calcula las Probabilities
       cout<<" --> Calculating probabilities to be choosen for each element "<<endl;
       Probabilities[0]=0.0;
-cout<<" ----------> PROB "<<0<<" "<<Probabilities[0]<<endl;
       for(j=1;j<n_pop+1;j++)
       {
          Probabilities[j]=Fit[j-1]+Probabilities[j-1];
-cout<<" ----------> PROB "<<j<<" "<<Probabilities[j]<<endl;
       }
-      cout<<" --> Chosing a random element of the population "<<endl;
+      cout<<" --> Choosing a random element of the population "<<endl;
       // rouleta
       eleccion=random_number(0,Probabilities[n_pop]);
-cout<<" eleccion random "<<random_number(0,Probabilities[n_pop])<<"  "<<n_pop<<endl;;
-cout<<eleccion <<endl;
       for(j=0;j<n_pop;j++)
       {
-cout<<Probabilities[j]<<" --> "<<Probabilities[j+1]<<endl;
          if((Probabilities[j] <= eleccion) && (eleccion < Probabilities[j+1]))
          {
             elegido=j;
          }
       }
-cout<<" elegido "<<elegido<<endl;
+      cout<<" --> Choosen element: "<<elegido<<endl;
       contenido=0;
-cout<<" prob max"<<Probabilities[n_pop]<<endl;
       while(contenido!=1)
       {
-        cout<<"Starting new while cycle"<<endl;
          if( random_number(0,1)<mate_mutate_ratio ) //Then mate
          {
             //Code for mating
+            cout<<" --> Performing crossover "<<endl;
             elegido2=elegido;
             while (elegido2==elegido)
             {
@@ -565,13 +546,11 @@ cout<<" prob max"<<Probabilities[n_pop]<<endl;
                   {
                      elegido2=j;
   //                   cout<<"  "<<elegido2<<endl;
-
                   }
                }
             }
-            cout<<" --> Mating choosen elements: "<<elegido<<" with "<<elegido2<<endl;
+            cout<<"   --> Choosen elements for mating: "<<elegido<<" with "<<elegido2<<endl;
             new_cluster=Crossover(clus[elegido],clus[elegido2]);
-      cout<<" performed crossover "<<endl;
             ////////////////// Bloque de código a copiar en mutate //////////////////
             path=file_name+"/Generation"+to_string(i);
             command.clear(); command="cd "+path+" ; cp ../run.sh tmp_dir/";
@@ -600,7 +579,7 @@ cout<<" prob max"<<Probabilities[n_pop]<<endl;
               command.clear();
             }
             command.clear();
-            cout<<" --> Relaxing son element "<<endl;
+            cout<<"   --> Relaxing son element "<<endl;
             command="cd "+path+"/tmp_dir ; ./run.sh";
             system(command.c_str());
             command.clear();
@@ -665,7 +644,6 @@ cout<<" prob max"<<Probabilities[n_pop]<<endl;
                }
             }
             ////////////////// Bloque de código a copiar en mutate //////////////////
-  cout<<" empezando codigo bloque "<<endl;
             path.clear();
             path=file_name+"/Generation"+to_string(i);
             command.clear(); command="cd "+path+" ; cp ../run.sh tmp_dir/";
@@ -683,7 +661,6 @@ cout<<" prob max"<<Probabilities[n_pop]<<endl;
             else
             {
               //codigo para cristal
-  cout<<"codigo cristal"<<endl;
               new_cluster.centroid();
               new_cluster.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-new_cluster.z_min());
               geometry_file.clear(); geometry_file=file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.tmp";
@@ -695,7 +672,7 @@ cout<<" prob max"<<Probabilities[n_pop]<<endl;
               command.clear();
             }
             command.clear();
-            cout<<" --> Relaxing son element "<<endl;
+            cout<<"   --> Relaxing son element "<<endl;
             command="cd "+path+"/tmp_dir ; ./run.sh";
             system(command.c_str());
             command.clear();
@@ -710,7 +687,7 @@ cout<<" prob max"<<Probabilities[n_pop]<<endl;
       {
          if(i+1 <= iteraciones)
          {
-            cout<<"================================================================================================"<<endl;
+            cout<<"\n\n================================================================================================"<<endl;
             cout<<" --> Starting generation "<<to_string(i+1)<<endl;
             cout<<"================================================================================================"<<endl;
 
