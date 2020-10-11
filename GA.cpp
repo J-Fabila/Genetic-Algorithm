@@ -90,7 +90,7 @@ if(continue_alg==1)
    cout<<" --> Restarting algorithm ...  "<<endl;
    string iteration_counter_i ="cd ";
    iteration_counter_i+=file_name;
-   iteration_counter_i+=" ; ls Generation* | wc -l";
+   iteration_counter_i+=" ; ls -R  | grep \"energies\" | wc -l";
    i=int_pipe(iteration_counter_i,1);
    if(i==1)
    {
@@ -102,11 +102,11 @@ if(continue_alg==1)
       //RECUERDA: en cada generacion poner un current_minimum
       Energy=float_pipe(command);*/
       command.clear();
+      cout<<" --> Restarting from generation"<<i<<" and relaxation "<<m<<" "<<endl;
    }
    //cout<<" --> Last Generation i="<<i<<" ; last rejected m="<<m<<" ; total performed steps : "<<i+m<<endl;
    //cout<<" --> Last Generation i="<<i<<" ; "<<m<<"/"<<n_pop<<" relaxations performed : "<<i<<endl;
    cout<<" --> Last Generation i="<<i<<endl;
-   cout<<" --> Restarting from generation"<<i<<" and relaxation "<<m<<" "<<endl;
 //  i++;
 //  cout<<" --> Starting step "<<i<<endl;
    m++;
@@ -257,9 +257,9 @@ else
 if(i==1)
 {
    cout<<" --> Starting FHI-aims calculations for first generation "<<endl;
-   command="echo 'Step ----> Energy[eV]' >> "+file_name+"/Generation1/energies.txt ";
+   /*command="echo 'Step ----> Energy[eV]' >> "+file_name+"/Generation1/energies.txt ";
    system(command.c_str());
-   command.clear();
+   command.clear();*/
    // running
    for(m=m;m<n_pop;m++)
    {
@@ -416,10 +416,6 @@ if(i==1)
          tag.clear();
          tag=" Iteration "+m_str+" -----> Energy = "+E_str+" eV ";
          clus[m].print_xyz(command,tag);
-         command.clear();
-         command="echo '"+to_string(m)+" ---->' "+E_str+" >> "+file_name+"/Generation"+to_string(i)+"/energies.txt";
-         system(command.c_str());
-         command.clear();
       }
       cout<<" --> Sorting obtained energies "<<endl;
       // Get Maximum Energy Value
@@ -452,8 +448,8 @@ if(i==1)
             min_tmp=current;
          }
       }
-  cout<<"   --> Maximum Energy = "<<min_tmp;
-  EnergiaActual=min_tmp;
+      cout<<"   --> Maximum Energy = "<<min_tmp;
+      EnergiaActual=min_tmp;
       // Get Minimum index
       for(j=0;j<n_pop;j++)
       {
@@ -502,11 +498,13 @@ if(i==1)
             cout<<"   --> Fit value of element "<<m<<" = "<<Fit[j]<<endl;
          }
       }
+      /*
       if((EnergiaAnterior-EnergiaActual)<delta_E)
       {
          cout<<" --> Stopping Genetic Algorithm: delta E reached "<<endl;
          break;
       } // else:  continua con una nueva generacion
+      */
       // Calcula las Probabilities
       cout<<" --> Calculating probabilities to be choosen for each element "<<endl;
       Probabilities[0]=0.0;
@@ -526,8 +524,14 @@ if(i==1)
       }
       cout<<" --> Choosen element: "<<elegido<<endl;
       contenido=0;
+      init=0;
       while(contenido!=1)
       {
+         init++;
+         if(init>1)
+         {
+            cout<<" --> Relaxation failed ... Restarting "<<endl;
+         }
          if( random_number(0,1)<mate_mutate_ratio ) //Then mate
          {
             //Code for mating
@@ -687,9 +691,9 @@ if(i==1)
       {
          if(i+1 <= iteraciones)
          {
-            cout<<"\n\n================================================================================================"<<endl;
+            cout<<"\n\n========================================================="<<endl;
             cout<<" --> Starting generation "<<to_string(i+1)<<endl;
-            cout<<"================================================================================================"<<endl;
+            cout<<"========================================================="<<endl;
 
          // Writing the minimum energy of the current generation
          command="cp "+file_name+"/Generation"+to_string(i)+"/E"+to_string(id_min)+"/relaxed_coordinates.xyz "+file_name;
@@ -714,6 +718,16 @@ if(i==1)
          tag=" Iteration "+to_string(id_max)+" -----> Energy = "+to_string(new_cluster_energy)+" eV ";
          clus[id_max].print_xyz(command,tag);
          command.clear();
+         // Escribe el resumen de energias
+         command=" cd "+file_name+"/Generation"+to_string(i)+" ; echo 'Step ----> Energy[eV]' > energies.txt ";
+         system(command.c_str()); command.clear();
+         for(j=0;j<n_pop;j++)
+         {
+           command.clear();
+           command="echo '"+to_string(j)+" ---->' "+to_string(Energies[j])+" >> "+file_name+"/Generation"+to_string(i)+"/energies.txt";
+           system(command.c_str());
+           command.clear();
+         }
          i++;
        }
       }
