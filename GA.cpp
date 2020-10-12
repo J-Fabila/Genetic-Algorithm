@@ -448,7 +448,7 @@ if(i==1)
             min_tmp=current;
          }
       }
-      cout<<"   --> Maximum Energy = "<<min_tmp;
+      cout<<"   --> Minimum Energy = "<<min_tmp;
       EnergiaActual=min_tmp;
       // Get Minimum index
       for(j=0;j<n_pop;j++)
