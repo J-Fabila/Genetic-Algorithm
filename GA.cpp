@@ -20,7 +20,7 @@ string Simbolo_1, Simbolo_2, file_name, command, aux,geometry_file;
 string initialization_file, outputfile, m_str, i_str, E_str, tag, path;
 int continue_alg,  Ncore, randomness, kick, iteraciones,swap_step, contenido, previus;
 int m, lj, N_Simbolo_1, N_Simbolo_2, count, fail_counter=0, resto, failed_max,crystal;
-int n_pop, element, fit_function, init;
+int n_pop, element, fit_function, init, gener;
 float step_width, Temperature, Energy, Energia, EnergiaActual, EnergiaAnterior, delta_E, k_BT, damp ;
 float x_min,y_min,z_min,x_max,y_max,z_max;
 Cluster clus_1, clus_2, c_aux;
@@ -384,16 +384,24 @@ if(i==1)
    while( i<iteraciones+1)
    {
       // Get energies from last iteration
-      cout<<" --> Reading energies of current generation "<<endl;
+      if(i!=1)
+      {
+         gener=i;
+      }
+      else
+      {
+         gener=1;
+      }
+      cout<<" --> Reading energies of current generation "<<gener<<endl;
       for(m=0;m<n_pop;m++)
       {
-         command="grep \" | Total energy of the DFT \" "+file_name+"/Generation"+to_string(i)+"/E"+to_string(m)+"/output.out | awk '{print $12}' ";
+         command="grep \" | Total energy of the DFT \" "+file_name+"/Generation"+to_string(gener)+"/E"+to_string(m)+"/output.out | awk '{print $12}' ";
          Energies[m]=double_pipe(command.c_str());
-         cout<<"   --> Energy of element "<<m<<"/"<<n_pop<<" = "<<Energies[m]<<" eV "<<endl;
+         cout<< std::setprecision (20)<<"   --> Energy of element "<<m<<"/"<<n_pop<<" = "<<Energies[m]<<" eV "<<endl;
          m_str=to_string(m);
          E_str=string_pipe(command); //Better for Energies with all the value
          command.clear();
-         command=file_name+"/Generation"+to_string(i)+"/E"+to_string(m)+"/geometry.in.next_step";
+         command=file_name+"/Generation"+to_string(gener)+"/E"+to_string(m)+"/geometry.in.next_step";
          if(crystal==0) // Gas phase
          {
             clus[m].read_fhi(command);
@@ -402,6 +410,7 @@ if(i==1)
          {
             if(N_Simbolo_2>0)
             {
+              /// CREO que extract funciona solo para xyz, tal vez de lata
                clus_1=extract(command,Simbolo_1);
                clus_2=extract(command,Simbolo_2);
                clus[m]  =clus_1+clus_2;
@@ -428,7 +437,7 @@ if(i==1)
             max_tmp=current;
          }
       }
-      cout<<"   --> Maximum Energy = "<<max_tmp;
+      cout << std::setprecision (20) <<"   --> Maximum Energy = "<<max_tmp;
       // Get Maximum index
       for(j=0;j<n_pop;j++)
       {
@@ -448,7 +457,7 @@ if(i==1)
             min_tmp=current;
          }
       }
-      cout<<"   --> Minimum Energy = "<<min_tmp;
+
       EnergiaActual=min_tmp;
       // Get Minimum index
       for(j=0;j<n_pop;j++)
@@ -458,6 +467,18 @@ if(i==1)
             id_min=j;
          }
       }
+      if(min_tmp==max_tmp)
+      {
+         if(id_max>0)
+         {
+            id_min=0;
+         }
+         else
+         {
+            id_min=1;
+         }
+      }
+      cout << std::setprecision (20) <<"   --> Minimum Energy = "<<min_tmp;
       cout<<" (element "<<id_min<<")"<<endl;
       // Calcula rho
       cout<<" --> Normalizing energies from last generation"<<endl;
@@ -485,17 +506,17 @@ if(i==1)
          if(fit_function==0) // Exponential
          {
             Fit[j]=exp(a_exp*rho[j]);
-            cout<<"   --> Fit value of element "<<j<<" = "<<Fit[j]<<endl;
+            cout << std::setprecision (20) <<"   --> Fit value of element "<<j<<" = "<<Fit[j]<<endl;
          }
          else if(fit_function==1) // Linear
          {
             Fit[j]=1-(a_lin*rho[j]);
-            cout<<"   --> Fit value of element "<<j<<" = "<<Fit[j]<<endl;
+            cout << std::setprecision (20) <<"   --> Fit value of element "<<j<<" = "<<Fit[j]<<endl;
          }
          else if(fit_function==2) // tanh
          {
             Fit[j]=(0.5)*(1-tanh(2.0*rho[j]-1));
-            cout<<"   --> Fit value of element "<<m<<" = "<<Fit[j]<<endl;
+            cout << std::setprecision (20) <<"   --> Fit value of element "<<m<<" = "<<Fit[j]<<endl;
          }
       }
       /*
@@ -554,6 +575,10 @@ if(i==1)
                }
             }
             cout<<"   --> Choosen elements for mating: "<<elegido<<" with "<<elegido2<<endl;
+system(" echo readed clusters");
+clus[elegido].print_xyz("clus1.xyz");
+clus[elegido2].print_xyz("clus2.xyz");
+system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ");
             new_cluster=Crossover(clus[elegido],clus[elegido2]);
             ////////////////// Bloque de código a copiar en mutate //////////////////
             path=file_name+"/Generation"+to_string(i);
@@ -566,6 +591,8 @@ if(i==1)
                command.clear();
                command=path+"/tmp_dir/geometry.in";
                new_cluster.centroid();
+               new_cluster.print_xyz("temp.xyz");
+               system("echo \"CAT TEMP \n \"  ; cat temp.xyz");
                new_cluster.print_fhi(command);
                command.clear();
             }
@@ -659,6 +686,7 @@ if(i==1)
                command.clear();
                command=path+"/tmp_dir/geometry.in";
                new_cluster.centroid();
+               system("echo \"CAT TEMP \n \"  ; cat temp.xyz");
                new_cluster.print_fhi(command);
                command.clear();
             }
@@ -687,6 +715,7 @@ if(i==1)
             new_cluster_energy=double_pipe(command.c_str());
             /////////////////////////////////////////////////////////////////////////
       }
+       cout<< std::setprecision (15) <<new_cluster_energy<<" < "<< max_tmp<<endl;
       if((contenido==1) && (new_cluster_energy<max_tmp))
       {
          if(i+1 <= iteraciones)
