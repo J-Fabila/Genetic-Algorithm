@@ -20,7 +20,7 @@ string Simbolo_1, Simbolo_2, file_name, command, aux,geometry_file;
 string initialization_file, outputfile, m_str, i_str, E_str, tag, path;
 int continue_alg,  Ncore, randomness, kick, iteraciones,swap_step, contenido, previus;
 int m, lj, N_Simbolo_1, N_Simbolo_2, count, fail_counter=0, resto, failed_max,crystal;
-int n_pop, element, fit_function, init, gener;
+int n_pop, element, fit_function, init, gener, criterion;
 float step_width, Temperature, Energy, Energia, EnergiaActual, EnergiaAnterior, delta_E, k_BT, damp ;
 float x_min,y_min,z_min,x_max,y_max,z_max;
 Cluster clus_1, clus_2, c_aux;
@@ -400,8 +400,12 @@ if(i==1)
          cout<< std::setprecision (20)<<"   --> Energy of element "<<m<<"/"<<n_pop<<" = "<<Energies[m]<<" eV "<<endl;
          m_str=to_string(m);
          E_str=string_pipe(command); //Better for Energies with all the value
+command.clear();
+command="echo \"reading geometry next step\" ; cat "+file_name+"/Generation"+to_string(gener)+"/E"+to_string(m)+"/geometry.in.next_step";
+system(command.c_str());
          command.clear();
          command=file_name+"/Generation"+to_string(gener)+"/E"+to_string(m)+"/geometry.in.next_step";
+
          if(crystal==0) // Gas phase
          {
             clus[m].read_fhi(command);
@@ -410,7 +414,7 @@ if(i==1)
          {
             if(N_Simbolo_2>0)
             {
-              /// CREO que extract funciona solo para xyz, tal vez de lata
+               // extract funciona con fhi
                clus_1=extract(command,Simbolo_1);
                clus_2=extract(command,Simbolo_2);
                clus[m]  =clus_1+clus_2;
@@ -526,6 +530,10 @@ if(i==1)
          break;
       } // else:  continua con una nueva generacion
       */
+      if(criterion>10)
+      {
+        break;
+      }
       // Calcula las Probabilities
       cout<<" --> Calculating probabilities to be choosen for each element "<<endl;
       Probabilities[0]=0.0;
@@ -592,8 +600,11 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ");
                command=path+"/tmp_dir/geometry.in";
                new_cluster.centroid();
                new_cluster.print_xyz("temp.xyz");
-               system("echo \"CAT TEMP \n \"  ; cat temp.xyz");
+               system("echo \"CAT new cluster \n \"  ; cat temp.xyz");
                new_cluster.print_fhi(command);
+               command.clear();
+               command="cp "+path+"/tmp_dir/geometry.in "+path+"/tmp_dir/geometry.in.next_step ";
+               system(command.c_str());
                command.clear();
             }
             else
@@ -606,6 +617,9 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ");
               command="cat "+file_name+"/crystal.in > "+file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.in ; ";
               command+=" sed '/atom/a initial_moment 0.5' "+geometry_file+" >> "+file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.in";
               command+=" ; rm "+geometry_file;
+              system(command.c_str());
+              command.clear();
+              command="cp "+path+"/tmp_dir/geometry.in "+path+"/tmp_dir/geometry.in.next_step ";
               system(command.c_str());
               command.clear();
             }
@@ -686,8 +700,11 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ");
                command.clear();
                command=path+"/tmp_dir/geometry.in";
                new_cluster.centroid();
-               system("echo \"CAT TEMP \n \"  ; cat temp.xyz");
+               system("echo \"CAT new clus \n \"  ; cat temp.xyz");
                new_cluster.print_fhi(command);
+               command.clear();
+               command="cp "+path+"/tmp_dir/geometry.in "+path+"/tmp_dir/geometry.in.next_step ";
+               system(command.c_str());
                command.clear();
             }
             else
@@ -700,6 +717,9 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ");
               command="cat "+file_name+"/crystal.in > "+file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.in ; ";
               command+=" sed '/atom/a initial_moment 0.5' "+geometry_file+" >> "+file_name+"/Generation"+to_string(i)+"/tmp_dir/geometry.in";
               command+=" ; rm "+geometry_file;
+              system(command.c_str());
+              command.clear();
+              command="cp "+path+"/tmp_dir/geometry.in "+path+"/tmp_dir/geometry.in.next_step ";
               system(command.c_str());
               command.clear();
             }
@@ -718,6 +738,10 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ");
        cout<< std::setprecision (15) <<new_cluster_energy<<" < "<< max_tmp<<endl;
       if((contenido==1) && (new_cluster_energy<max_tmp))
       {
+         if(new_cluster_energy<max_tmp)
+         {
+            criterion++;
+         }
          if(i+1 <= iteraciones)
          {
             cout<<"\n\n========================================================="<<endl;
@@ -739,7 +763,12 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ");
          command+="rm * ; mv ../tmp_dir/* .";
          system(command.c_str());
          command.clear();
-         command=file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/geometry.in.next_step";
+  command="echo \" cat geometry next step \" ; cat "+file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/geometry.in.next_step";
+  system(command.c_str());
+  command.clear();
+//         command=file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/geometry.in.next_step";
+         command=file_name+"/Generation"+to_string(i+1)+"/tmp_dir/geometry.in.next_step";
+
          clus[id_max].read_fhi(command);
          command.clear();
          command=file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/relaxed_coordinates.xyz";
@@ -757,6 +786,22 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ");
            system(command.c_str());
            command.clear();
          }
+         // Ordena las energies y escribe sorted.txt por cada generacion
+         command=" cd "+file_name+"/Generation"+to_string(i)+" ; echo 'Step ----> Energy[eV]' > sorted.txt ; ";
+         command="tail -"+to_string(n_pop)+" energies.txt |  sort -nk3 >> sorted.txt";
+         system(command.c_str());
+         command.clear();
+         //Genera un resumen hasta el momento de las energias por generacion
+         command=" cd "+file_name+" ; echo 'Generation ----> Minimum_Energy[eV]' > summary.txt ; ";
+         for(j=1;j<i;j++)
+         {
+            command.clear();
+            command=" cd "+ file_name+"/Generation"+to_string(j);
+            command+=" ; en=$(cat minimum_energy.xyz  | head -2 | tail -1 | awk '{print $6}') ; ";
+            command+=" echo "+to_string(j)+" ----> $en >>  ../summary.txt";
+            system(command.c_str());
+         }
+
          i++;
        }
       }
