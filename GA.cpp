@@ -90,7 +90,7 @@ if(continue_alg==1)
    cout<<" --> Restarting algorithm ...  "<<endl;
    string iteration_counter_i ="cd ";
    iteration_counter_i+=file_name;
-   iteration_counter_i+=" ; ls -R  | grep \"energies\" | wc -l";
+   iteration_counter_i+=" ; ls  | grep \"Generation\" | wc -l";
    i=int_pipe(iteration_counter_i,1);
    if(i==1)
    {
