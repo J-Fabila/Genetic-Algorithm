@@ -96,7 +96,7 @@ if(continue_alg==1)
    {
       string iteration_counter_m ="cd ";
       iteration_counter_m+=file_name;
-      iteration_counter_m+="/Generation"+to_string(i)+" ; ls -R | grep \"relaxed.xyz\" | wc -l"; //el -R nos da libertad de escoger nombres
+      iteration_counter_m+="/Generation"+to_string(i)+" ; cat E*/output.out | grep \"Have a nice day\" | wc -l"; //el -R nos da libertad de escoger nombres
       m=int_pipe(iteration_counter_m,0);
       /*command.clear(); command=" cd "+file_name+"/Generation"+to_string(i)+" ; head -2 current_minimum.xyz | tail -1 | awk '{print $6 }' ";
       //RECUERDA: en cada generacion poner un current_minimum
