@@ -401,6 +401,7 @@ if(i==1)
          m_str=to_string(m);
          E_str=string_pipe(command); //Better for Energies with all the value
 command.clear();
+// ESTA ES LA PARTE QUE IMPRIME LAS COORDENADAS AL ARCHIVO SALIDA BORRALO DESPUES SI QUERES
 command="echo \"reading geometry next step\" ; cat "+file_name+"/Generation"+to_string(gener)+"/E"+to_string(m)+"/geometry.in.next_step";
 system(command.c_str());
          command.clear();
