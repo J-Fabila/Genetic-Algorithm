@@ -397,7 +397,7 @@ if(i==1)
       {
          command="grep \" | Total energy of the DFT \" "+file_name+"/Generation"+to_string(gener)+"/E"+to_string(m)+"/output.out | awk '{print $12}' ";
          Energies[m]=double_pipe(command.c_str());
-         cout<< std::setprecision (20)<<"   --> Energy of element "<<m<<"/"<<n_pop<<" = "<<Energies[m]<<" eV "<<endl;
+         cout<< std::setprecision (20)<<"   --> Energy of element "<<m+1<<"/"<<n_pop<<" = "<<Energies[m]<<" eV "<<endl;
          m_str=to_string(m);
          E_str=string_pipe(command); //Better for Energies with all the value
 command.clear();
