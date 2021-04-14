@@ -779,15 +779,15 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ; rm clus1.xyz c
          clus[id_max].print_xyz(command,tag);
          command.clear();
          // Escribe el resumen de energias
-         command=" cd "+file_name+"/Generation"+to_string(i)+" ; echo 'Step ----> Energy[eV]' > energies.txt ";
-         system(command.c_str()); command.clear();
+         //command=" cd "+file_name+"/Generation"+to_string(i)+" ; echo 'Step ----> Energy[eV]' > energies.txt ";
+         /*system(command.c_str()); command.clear();
          for(j=0;j<n_pop;j++)
          {
            command.clear();
            command="echo '"+to_string(j)+" ---->' "+to_string(Energies[j])+" >> "+file_name+"/Generation"+to_string(i)+"/energies.txt";
            system(command.c_str());
            command.clear();
-         }
+         }*/
          // Ordena las energies y escribe sorted.txt por cada generacion
          //command=" cd "+file_name+"/Generation"+to_string(i)+" ; echo 'Step ----> Energy[eV]' > sorted.txt ; ";
          //command="tail -"+to_string(n_pop)+" energies.txt |  sort -nk3 >> sorted.txt";
@@ -803,6 +803,7 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ; rm clus1.xyz c
             command+=" echo "+to_string(j)+"  $en >>  ../summary.txt";
             system(command.c_str());
          }
+           // Si funciona asi despues agregale un sorted
 
          i++;
        }
