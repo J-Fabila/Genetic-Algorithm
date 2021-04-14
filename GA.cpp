@@ -42,7 +42,7 @@ randomness=int_pipe("grep 'randomness' input.bh | cut -d \"=\" -f2 | awk '{print
 kick=int_pipe("grep 'kick_type' input.bh  | cut -d \"=\" -f2 | awk '{print $1}' ");
 file_name=string_pipe("grep 'directory_name' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 step_width=float_pipe("grep 'step_width' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
-Temperature=float_pipe("grep 'temperature_K' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
+//Temperature=float_pipe("grep 'temperature_K' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 mate_mutate_ratio=float_pipe("grep 'mate_mutate_ratio' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 swap_ratio=float_pipe("grep 'swap_ratio' input.bh | cut -d \"=\" -f2 | awk '{print $1}' ");
 Ncore=int_pipe("grep 'Ncore' input.bh | head -1 | cut -d \"=\" -f2 | awk '{print $1}' ");
