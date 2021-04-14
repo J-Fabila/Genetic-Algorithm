@@ -793,13 +793,13 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ");
          system(command.c_str());
          command.clear();
          //Genera un resumen hasta el momento de las energias por generacion
-         command=" cd "+file_name+" ; echo 'Generation ----> Minimum_Energy[eV]' > summary.txt ; ";
+         command=" cd "+file_name+" ; echo 'Generation  Minimum_Energy[eV]' > summary.txt ; ";
          for(j=1;j<i;j++)
          {
             command.clear();
             command=" cd "+ file_name+"/Generation"+to_string(j);
             command+=" ; en=$(cat minimum_energy.xyz  | head -2 | tail -1 | awk '{print $6}') ; ";
-            command+=" echo "+to_string(j)+" ----> $en >>  ../summary.txt";
+            command+=" echo "+to_string(j)+"  $en >>  ../summary.txt";
             system(command.c_str());
          }
 
