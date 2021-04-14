@@ -533,7 +533,7 @@ system(command.c_str());
       */
       if(criterion>10)
       {
-        break;
+       // break;
       }
       // Calcula las Probabilities
       cout<<" --> Calculating probabilities to be choosen for each element "<<endl;
