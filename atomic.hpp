@@ -3168,8 +3168,9 @@ void Cluster::simulated_annealing(float kick_s=1.5,string movie_file="false",int
   system("rm temporal.xyz temporal2.xyz");
 }
 
-Cluster Crossover(Cluster cluster1, Cluster cluster2)
+Cluster Crossover(Cluster cluster1, Cluster cluster2, float separation=1.0)
 {
+   float cross_sep=separation/2.0;
    Cluster cluster3;
    cluster3.Nat=cluster1.Nat;
    cluster3.atom=new Atom[cluster3.Nat+1];
@@ -3181,12 +3182,15 @@ Cluster Crossover(Cluster cluster1, Cluster cluster2)
    int contador_aux;
 
    cluster1.centroid();
+   //cluster1.move(0,0,1); //O incluso el A completo, pero ojo en total serian 2
 
    //theta_=random_number(0,3);
    //phi_=random_number(0,1.5);
    //cluster1.rotate_Rad(theta_,phi_);
 
    cluster2.centroid();
+   //cluster1.move(0,0,-1); //O incluso el A completo, pero ojo en total serian 2
+
    //theta_=random_number(0,3);
    //phi_=random_number(0,1.5);
    //cluster2.rotate_Deg(theta_,phi_);
@@ -3224,7 +3228,14 @@ Cluster Crossover(Cluster cluster1, Cluster cluster2)
             cluster3.atom[contador_aux].Symbol=cluster1.atom[i].Symbol;
             for(j=0;j<3;j++)
             {
-               cluster3.atom[contador_aux].x[j]=cluster1.atom[i].x[j];
+               if(j==2)//
+               {//
+                 cluster3.atom[contador_aux].x[j]=cluster1.atom[i].x[j]-cross_sep;//
+               }//
+               else
+               {
+                  cluster3.atom[contador_aux].x[j]=cluster1.atom[i].x[j];
+               }
             }
             contador_aux++;
          }
@@ -3236,7 +3247,14 @@ Cluster Crossover(Cluster cluster1, Cluster cluster2)
           cluster3.atom[contador_aux].Symbol=cluster2.atom[i].Symbol;
           for(j=0;j<3;j++)
             {
-               cluster3.atom[contador_aux].x[j]=cluster2.atom[i].x[j];
+               if(j==2)//
+               {//
+                 cluster3.atom[contador_aux].x[j]=cluster2.atom[i].x[j]+cross_sep;//
+               }//
+               else
+               {
+                  cluster3.atom[contador_aux].x[j]=cluster2.atom[i].x[j];
+               }
             }
             contador_aux++;
          }
@@ -3252,7 +3270,14 @@ Cluster Crossover(Cluster cluster1, Cluster cluster2)
             cluster3.atom[contador_aux].Symbol=cluster1.atom[i].Symbol;
             for(j=0;j<3;j++)
             {
-               cluster3.atom[contador_aux].x[j]=cluster1.atom[i].x[j];
+               if(j==2)//
+               {//
+                 cluster3.atom[contador_aux].x[j]=cluster1.atom[i].x[j]-cross_sep;//
+               }//
+               else
+               {
+                 cluster3.atom[contador_aux].x[j]=cluster1.atom[i].x[j];
+               }
             }
             contador_aux++;
          }
@@ -3262,10 +3287,17 @@ Cluster Crossover(Cluster cluster1, Cluster cluster2)
       {
         if(cluster2.atom[i].x[2]>0.0)
         {
-           cluster3.atom[contador_aux].Symbol=cluster2.atom[i].Symbol;
            for(j=0;j<3;j++)
            {
               cluster3.atom[contador_aux].x[j]=cluster2.atom[i].x[j];
+              if(j==2)//
+              {//
+                cluster3.atom[contador_aux].x[j]=cluster2.atom[i].x[j]+cross_sep;//
+              }//
+              else
+              {
+                 cluster3.atom[contador_aux].Symbol=cluster2.atom[i].Symbol;
+              }
            }
            contador_aux++;
         }
@@ -3283,7 +3315,14 @@ Cluster Crossover(Cluster cluster1, Cluster cluster2)
            cluster3.atom[contador_aux].Symbol=cluster1.atom[i].Symbol;
            for(j=0;j<3;j++)
            {
-              cluster3.atom[contador_aux].x[j]=cluster1.atom[i].x[j];
+              if(j==2)//
+              {//
+                cluster3.atom[contador_aux].x[j]=cluster1.atom[i].x[j]-cross_sep;//
+              }//
+              else
+              {
+                cluster3.atom[contador_aux].x[j]=cluster1.atom[i].x[j];
+              }
            }
            contador_aux++;
         }
@@ -3295,7 +3334,14 @@ Cluster Crossover(Cluster cluster1, Cluster cluster2)
            cluster3.atom[contador_aux].Symbol=cluster2.atom[i].Symbol;
            for(j=0;j<3;j++)
            {
-              cluster3.atom[contador_aux].x[j]=cluster2.atom[i].x[j];
+              if(j==2)//
+              {//
+                cluster3.atom[contador_aux].x[j]=cluster2.atom[i].x[j]+cross_sep;//
+              }//
+              else
+              {
+                 cluster3.atom[contador_aux].x[j]=cluster2.atom[i].x[j];
+              }
            }
            contador_aux++;
         }
@@ -3309,7 +3355,14 @@ Cluster Crossover(Cluster cluster1, Cluster cluster2)
            cluster3.atom[contador_aux].Symbol=cluster1.atom[i].Symbol;
            for(j=0;j<3;j++)
            {
-              cluster3.atom[contador_aux].x[j]=cluster1.atom[i].x[j];
+              if(j==2)//
+              {//
+                cluster3.atom[contador_aux].x[j]=cluster1.atom[i].x[j]-cross_sep;//
+              }//
+              else
+              {
+                cluster3.atom[contador_aux].x[j]=cluster1.atom[i].x[j];
+              }
            }
            contador_aux++;
         }
@@ -3319,3 +3372,4 @@ Cluster Crossover(Cluster cluster1, Cluster cluster2)
    }
    return cluster3;
 }
+
