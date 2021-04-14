@@ -584,10 +584,11 @@ system(command.c_str());
                }
             }
             cout<<"   --> Choosen elements for mating: "<<elegido<<" with "<<elegido2<<endl;
+ ////////////////// ACA IMPRIME LOS CLUSTERS 
 system(" echo readed clusters");
 clus[elegido].print_xyz("clus1.xyz");
 clus[elegido2].print_xyz("clus2.xyz");
-system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ");
+system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ; rm clus1.xyz clus2.xyz ");
             new_cluster=Crossover(clus[elegido],clus[elegido2]);
             ////////////////// Bloque de código a copiar en mutate //////////////////
             path=file_name+"/Generation"+to_string(i);
