@@ -742,6 +742,9 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ; rm clus1.xyz c
       {
          if(new_cluster_energy<max_tmp)
          {
+           // La idea acá es que si new cluster energy permanece inalterada entonces agrega
+           // una unidad, luego if criterion > X then break; pero esto por el momento solo
+           // está tronando el programa antes de tiempo. Ver Linea 534
             criterion++;
          }
          if(i+1 <= iteraciones)
