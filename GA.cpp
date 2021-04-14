@@ -789,8 +789,8 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ; rm clus1.xyz c
            command.clear();
          }
          // Ordena las energies y escribe sorted.txt por cada generacion
-         command=" cd "+file_name+"/Generation"+to_string(i)+" ; echo 'Step ----> Energy[eV]' > sorted.txt ; ";
-         command="tail -"+to_string(n_pop)+" energies.txt |  sort -nk3 >> sorted.txt";
+         //command=" cd "+file_name+"/Generation"+to_string(i)+" ; echo 'Step ----> Energy[eV]' > sorted.txt ; ";
+         //command="tail -"+to_string(n_pop)+" energies.txt |  sort -nk3 >> sorted.txt";
          system(command.c_str());
          command.clear();
          //Genera un resumen hasta el momento de las energias por generacion
