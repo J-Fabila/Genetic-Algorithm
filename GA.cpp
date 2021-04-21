@@ -400,10 +400,10 @@ if(i==1)
          cout<< std::setprecision (20)<<"   --> Energy of element "<<m+1<<"/"<<n_pop<<" = "<<Energies[m]<<" eV "<<endl;
          m_str=to_string(m);
          E_str=string_pipe(command); //Better for Energies with all the value
-command.clear();
+//command.clear();
 // ESTA ES LA PARTE QUE IMPRIME LAS COORDENADAS AL ARCHIVO SALIDA BORRALO DESPUES SI QUERES
-command="echo \"reading geometry next step\" ; cat "+file_name+"/Generation"+to_string(gener)+"/E"+to_string(m)+"/geometry.in.next_step";
-system(command.c_str());
+//command="echo \"reading geometry next step\" ; cat "+file_name+"/Generation"+to_string(gener)+"/E"+to_string(m)+"/geometry.in.next_step";
+//system(command.c_str());
          command.clear();
          command=file_name+"/Generation"+to_string(gener)+"/E"+to_string(m)+"/geometry.in.next_step";
 
@@ -768,9 +768,9 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ; rm clus1.xyz c
          command+="rm * ; mv ../tmp_dir/* .";
          system(command.c_str());
          command.clear();
-  command="echo \" cat geometry next step \" ; cat "+file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/geometry.in.next_step";
-  system(command.c_str());
-  command.clear();
+//  command="echo \" cat geometry next step \" ; cat "+file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/geometry.in.next_step";
+//  system(command.c_str());
+//  command.clear();
 //         command=file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/geometry.in.next_step";
          command=file_name+"/Generation"+to_string(i+1)+"/tmp_dir/geometry.in.next_step";
 
