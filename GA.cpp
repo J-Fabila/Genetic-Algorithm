@@ -813,6 +813,11 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ; rm clus1.xyz c
             system(command.c_str());
          }
            // Si funciona asi despues agregale un sorted
+           //sort -rnk2 summary.txt
+         command.clear();
+         command=" cd "+ file_name;
+         command+=" ; sort -rnk2 summary.txt >  sorted.txt";
+         system(command.c_str());
 
          i++;
        }
