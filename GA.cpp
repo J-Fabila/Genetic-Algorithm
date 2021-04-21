@@ -521,7 +521,7 @@ if(i==1)
          else if(fit_function==2) // tanh
          {
             Fit[j]=(0.5)*(1-tanh(2.0*rho[j]-1));
-            cout << std::setprecision (20) <<"   --> Fit value of element "<<m<<" = "<<Fit[j]<<endl;
+            cout << std::setprecision (20) <<"   --> Fit value of element "<<j<<" = "<<Fit[j]<<endl;
          }
       }
       /*
