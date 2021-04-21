@@ -737,7 +737,7 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ; rm clus1.xyz c
             new_cluster_energy=double_pipe(command.c_str());
             /////////////////////////////////////////////////////////////////////////
       }
-       cout<< std::setprecision (15) <<new_cluster_energy<<" < "<< max_tmp<<endl;
+       cout<< std::setprecision (20) <<new_cluster_energy<<" < "<< max_tmp<<endl;
       if((contenido==1) && (new_cluster_energy<max_tmp))
       {
          if(new_cluster_energy<max_tmp)
