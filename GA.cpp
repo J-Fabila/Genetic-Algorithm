@@ -503,7 +503,7 @@ system(command.c_str());
       }
       else if(fit_function==2) // tanh
       {
-         cout<<" hyperbolic tangen function "<<endl;
+         cout<<" hyperbolic tangent function "<<endl;
       }
       //Calcula fit
       for(j=0;j<n_pop;j++)
