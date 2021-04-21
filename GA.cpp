@@ -542,6 +542,11 @@ if(i==1)
       {
          Probabilities[j]=Fit[j-1]+Probabilities[j-1];
       }
+      for(j=0;j<n_pop;j++)
+      {
+         cout << std::setprecision (20) <<"   --> Probability value of element "<<j+1<<" = "<<Fit[j]/Probabilities[n_pop]<<endl;
+      }
+     //Si algo sale mal es porque probabilities[npop]  debera ser npop+1
       cout<<" --> Choosing a random element of the population "<<endl;
       // rouleta
       eleccion=random_number(0,Probabilities[n_pop]);
