@@ -607,7 +607,7 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ; rm clus1.xyz c
                command=path+"/tmp_dir/geometry.in";
                new_cluster.centroid();
                new_cluster.print_xyz("temp.xyz");
-               system("echo \"CAT new cluster \n \"  ; cat temp.xyz");
+               //system("echo \"CAT new cluster \n \"  ; cat temp.xyz");
                new_cluster.print_fhi(command);
                command.clear();
                command="cp "+path+"/tmp_dir/geometry.in "+path+"/tmp_dir/geometry.in.next_step ";
@@ -707,7 +707,7 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ; rm clus1.xyz c
                command.clear();
                command=path+"/tmp_dir/geometry.in";
                new_cluster.centroid();
-               system("echo \"CAT new clus \n \"  ; cat temp.xyz");
+               //system("echo \"CAT new clus \n \"  ; cat temp.xyz");
                new_cluster.print_fhi(command);
                command.clear();
                command="cp "+path+"/tmp_dir/geometry.in "+path+"/tmp_dir/geometry.in.next_step ";
