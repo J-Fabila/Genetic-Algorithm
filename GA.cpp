@@ -777,7 +777,9 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ; rm clus1.xyz c
 //  system(command.c_str());
 //  command.clear();
 //         command=file_name+"/Generation"+to_string(i+1)+"/E"+to_string(id_max)+"/geometry.in.next_step";
-         command=file_name+"/Generation"+to_string(i+1)+"/tmp_dir/geometry.in.next_step";
+           
+     //Esto solo sirve para pasar del tmp_dir geometry next step a relaxed coordinates, medi oque no sirve para nada
+     /*command=file_name+"/Generation"+to_string(i+1)+"/tmp_dir/geometry.in.next_step";
 
          clus[id_max].read_fhi(command);
          command.clear();
@@ -786,6 +788,7 @@ system(" cat clus1.xyz ; echo '===============' ; cat clus2.xyz ; rm clus1.xyz c
          tag=" Iteration "+to_string(id_max)+" -----> Energy = "+to_string(new_cluster_energy)+" eV ";
          clus[id_max].print_xyz(command,tag);
          command.clear();
+     */
          // Escribe el resumen de energias
          //command=" cd "+file_name+"/Generation"+to_string(i)+" ; echo 'Step ----> Energy[eV]' > energies.txt ";
          /*system(command.c_str()); command.clear();
